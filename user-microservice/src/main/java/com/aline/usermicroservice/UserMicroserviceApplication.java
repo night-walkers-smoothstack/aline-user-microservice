@@ -1,13 +1,13 @@
-package com.aline.microservicetemplate;
+package com.aline.usermicroservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class MicroserviceTemplateApplication {
+public class UserMicroserviceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(MicroserviceTemplateApplication.class, args);
+        SpringApplication.run(UserMicroserviceApplication.class, args);
     }
 
 }

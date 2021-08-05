@@ -12,10 +12,10 @@
     <packaging>jar</packaging>
 
     <groupId>com.aline</groupId>
-    <artifactId>microservice-template</artifactId>
+    <artifactId>user-microservice</artifactId>
     <version>0.1.0</version>
-    <name>microservice-template</name>
-    <description>Microservice template project for Aline Financial</description>
+    <name>User Microservice</name>
+    <description>User microservice that handles CRUD operations on users.</description>
     <properties>
         <java.version>1.8</java.version>
     </properties>
@@ -73,6 +73,11 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
             <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.aline</groupId>
+            <artifactId>core</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 
