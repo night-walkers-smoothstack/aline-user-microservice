@@ -1,11 +1,14 @@
 package com.aline.usermicroservice.controller;
 
-import com.aline.core.dto.response.PaginatedResponse;
-import org.springframework.http.ResponseEntity;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Api("/users")
 @RestController
 @RequestMapping("/users")
-public class UserController implements ICrudController<C, R, U, K> {
+public class UserController {
+
+
+
 }
