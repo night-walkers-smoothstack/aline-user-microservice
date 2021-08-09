@@ -17,6 +17,7 @@ application.yaml
 application.yml
 !*-test.properties
 !*-test.yml
+!openapi-config.properties
 
 ### IntelliJ IDEA ###
 .idea

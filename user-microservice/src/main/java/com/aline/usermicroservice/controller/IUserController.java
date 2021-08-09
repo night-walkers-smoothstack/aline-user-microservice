@@ -13,31 +13,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-/**
- * The CrudController interface provides
- * the default get mappings and return types for a
- * base CRUD Rest Controller.
- * 
- * @apiNote The interface is annotated by default with
- *          <code>@RequestMapping("/default")</code> which
- *          means all mappings will have a parent path of
- *          <em>/default</em>.
- */
+
 @RequestMapping("/users")
-public interface IUserController {
+public interface IUserController extends CrudController<UserResponse, UserRegistration, UserProfileUpdate, Long> {
 
-    @GetMapping("/{id}")
-    ResponseEntity<UserResponse> getUserById(@PathVariable("id") Long id);
-
-    @GetMapping
-    ResponseEntity<PaginatedResponse<UserResponse>> getAllUsers();
-
-    @PostMapping
-    ResponseEntity<UserResponse> registerUser(@RequestBody UserRegistration registration);
-
-    @PutMapping("/{id}")
-    ResponseEntity<Void> updateUser(@PathVariable("id") Long id, @RequestBody UserProfileUpdate profileUpdate);
-
-    @DeleteMapping("/{id}")
-    ResponseEntity<Void> deleteUser(@PathVariable("id") Long id);
 }
