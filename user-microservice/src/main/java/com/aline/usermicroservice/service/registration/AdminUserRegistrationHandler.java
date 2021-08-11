@@ -5,11 +5,14 @@ import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.AdminUser;
 import com.aline.core.model.user.UserRole;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+/**
+ * Implementation of the UserRegistrationHandler interface.
+ * This class provides registration logic specifically for
+ * the AdminUser entity.
+ */
 @Component
 @RequiredArgsConstructor
 public class AdminUserRegistrationHandler implements UserRegistrationHandler<AdminUser, AdminUserRegistration> {
@@ -23,12 +26,6 @@ public class AdminUserRegistrationHandler implements UserRegistrationHandler<Adm
 
     @Override
     public AdminUser register(AdminUserRegistration registration) {
-        log.info("Register ADMIN USER with username: {}, password: {}, firstName: {}, lastName: {}, email: {}",
-                registration.getUsername(),
-                registration.getPassword(),
-                registration.getFirstName(),
-                registration.getLastName(),
-                registration.getEmail());
         String hashedPassword = passwordEncoder.encode(registration.getPassword());
         return AdminUser.builder()
                 .firstName(registration.getFirstName())

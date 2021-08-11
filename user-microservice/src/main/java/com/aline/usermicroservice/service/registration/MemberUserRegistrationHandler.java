@@ -6,20 +6,18 @@ import com.aline.core.exception.NotFoundException;
 import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.UserRole;
-import com.aline.core.repository.MemberUserRepository;
 import com.aline.usermicroservice.service.MemberService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeMap;
-import org.modelmapper.spi.PropertyMapping;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
-@Slf4j
+/**
+ * Implementation of the UserRegistrationHandler interface.
+ * This class provides an implementation that registers specifically
+ * a MemberUser entity.
+ */
 @Component
 @RequiredArgsConstructor
 public class MemberUserRegistrationHandler implements UserRegistrationHandler<MemberUser, MemberUserRegistration> {
@@ -35,10 +33,6 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
     @Transactional(rollbackOn = NotFoundException.class)
     @Override
     public MemberUser register(MemberUserRegistration registration) {
-        log.info("Register MEMBER USER with username: {}, password: {}, membership number: {}",
-                registration.getUsername(),
-                registration.getPassword(),
-                registration.getMembershipId());
         Member member = memberService.getMemberByMembershipId(registration.getMembershipId());
         String hashedPassword = passwordEncoder.encode(registration.getPassword());
         return MemberUser.builder()
