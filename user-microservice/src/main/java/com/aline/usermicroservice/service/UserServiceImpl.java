@@ -5,11 +5,13 @@ import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +63,9 @@ public class UserServiceImpl implements UserService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public UserResponse registerUser(UserRegistration registration) {
-        handlerMap.get(registration.getClass()).register(registration);
-        return null;
+    public UserResponse registerUser(@Valid UserRegistration registration) {
+        val handler = handlerMap.get(registration.getClass());
+        User user = handler.register(registration);
+        return handler.mapToResponse(repository.save(user));
     }
 }
