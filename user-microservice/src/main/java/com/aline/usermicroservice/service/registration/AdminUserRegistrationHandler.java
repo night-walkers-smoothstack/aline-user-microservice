@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
+
 /**
  * Implementation of the UserRegistrationHandler interface.
  * This class provides registration logic specifically for
@@ -30,6 +32,7 @@ public class AdminUserRegistrationHandler implements UserRegistrationHandler<Adm
         return AdminUserRegistration.class;
     }
 
+    @Transactional(rollbackOn = {UsernameConflictException.class, EmailConflictException.class})
     @Override
     public AdminUser register(AdminUserRegistration registration) {
         if (repository.existsByUsername(registration.getUsername()))
