@@ -2,13 +2,11 @@ package com.aline.usermicroservice.service.registration;
 
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.response.UserResponse;
-import com.aline.core.exception.ConflictException;
 import com.aline.core.exception.conflict.EmailConflictException;
 import com.aline.core.exception.conflict.UsernameConflictException;
 import com.aline.core.model.user.AdminUser;
 import com.aline.core.model.user.UserRole;
 import com.aline.core.repository.AdminUserRepository;
-import com.aline.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
