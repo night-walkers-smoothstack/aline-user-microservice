@@ -40,6 +40,7 @@ public class UserControllerTest {
                         .username("member")
                         .password("P@ssword123")
                         .membershipId("12345678")
+                        .lastFourOfSSN("2222")
                         .build();
         String memberBody = mapper.writeValueAsString(memberUserRegistration);
         mockMvc.perform(post("/users/registration")
@@ -69,6 +70,74 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.username").value("adminboy"))
                 .andExpect(jsonPath("$.firstName").value("Admin"))
                 .andExpect(jsonPath("$.lastName").value("Boy"))
+                .andDo(print());
+    }
+
+    @Test
+    void test_registerUser_status_is_notFound_when_membershipId_doesNotExist() throws Exception {
+
+        MemberUserRegistration memberUserRegistration =
+                MemberUserRegistration.builder()
+                        .username("member")
+                        .password("P@ssword123")
+                        .membershipId("87654321")
+                        .lastFourOfSSN("2222")
+                        .build();
+        String memberBody = mapper.writeValueAsString(memberUserRegistration);
+        mockMvc.perform(post("/users/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(memberBody))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    void test_registerUser_status_is_notFound_when_ssn_doesNotMatch() throws Exception {
+
+        MemberUserRegistration memberUserRegistration =
+                MemberUserRegistration.builder()
+                        .username("member")
+                        .password("P@ssword123")
+                        .membershipId("12345678")
+                        .lastFourOfSSN("5555")
+                        .build();
+        String memberBody = mapper.writeValueAsString(memberUserRegistration);
+        mockMvc.perform(post("/users/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(memberBody))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    void test_registerUser_status_is_conflict_when_memberUserAlreadyExists_for_membershipId() throws Exception {
+        MemberUserRegistration memberUserRegistration =
+                MemberUserRegistration.builder()
+                        .username("member")
+                        .password("P@ssword123")
+                        .membershipId("12345678")
+                        .lastFourOfSSN("2222")
+                        .build();
+        String memberBody = mapper.writeValueAsString(memberUserRegistration);
+        mockMvc.perform(post("/users/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(memberBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value("member"))
+                .andDo(print());
+
+        MemberUserRegistration alreadyExistsRegistration =
+                MemberUserRegistration.builder()
+                        .username("alreadyexists")
+                        .password("P@ssword123")
+                        .membershipId("12345678")
+                        .lastFourOfSSN("2222")
+                        .build();
+        String memberBody2 = mapper.writeValueAsString(alreadyExistsRegistration);
+        mockMvc.perform(post("/users/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(memberBody2))
+                .andExpect(status().isConflict())
                 .andDo(print());
     }
 

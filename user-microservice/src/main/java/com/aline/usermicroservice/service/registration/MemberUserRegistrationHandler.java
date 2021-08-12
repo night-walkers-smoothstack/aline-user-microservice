@@ -2,10 +2,14 @@ package com.aline.usermicroservice.service.registration;
 
 import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.ConflictException;
 import com.aline.core.exception.NotFoundException;
+import com.aline.core.exception.notfound.MemberNotFoundException;
 import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.UserRole;
+import com.aline.core.repository.MemberUserRepository;
+import com.aline.core.repository.UserRepository;
 import com.aline.usermicroservice.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +28,8 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
 
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository repository;
+    private final MemberUserRepository memberUserRepository;
 
     @Override
     public Class<MemberUserRegistration> registersAs() {
@@ -34,12 +40,17 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
     @Override
     public MemberUser register(MemberUserRegistration registration) {
         Member member = memberService.getMemberByMembershipId(registration.getMembershipId());
+        if (!member.getApplicant().getSocialSecurity().endsWith(registration.getLastFourOfSSN()))
+            throw new MemberNotFoundException();
+        if (memberUserRepository.existsByMembershipId(registration.getMembershipId()))
+            throw new ConflictException("A user already exists with this membership.");
         String hashedPassword = passwordEncoder.encode(registration.getPassword());
-        return MemberUser.builder()
+        MemberUser user = MemberUser.builder()
                 .username(registration.getUsername())
                 .password(hashedPassword)
                 .member(member)
                 .build();
+        return repository.save(user);
     }
 
     @Override

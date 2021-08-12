@@ -115,7 +115,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse registerUser(@Valid UserRegistration registration) {
         val handler = handlerMap.get(registration.getClass());
-        User user = handler.register(registration);
-        return handler.mapToResponse(repository.save(user));
+        return handler.mapToResponse(handler.register(registration));
     }
 }
