@@ -4,6 +4,7 @@ import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.ConflictException;
 import com.aline.core.exception.NotFoundException;
+import com.aline.core.exception.conflict.UsernameConflictException;
 import com.aline.core.exception.notfound.MemberNotFoundException;
 import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
@@ -28,21 +29,22 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
 
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository repository;
-    private final MemberUserRepository memberUserRepository;
+    private final MemberUserRepository repository;
 
     @Override
     public Class<MemberUserRegistration> registersAs() {
         return MemberUserRegistration.class;
     }
 
-    @Transactional(rollbackOn = NotFoundException.class)
+    @Transactional(rollbackOn = {MemberNotFoundException.class, ConflictException.class, UsernameConflictException.class})
     @Override
     public MemberUser register(MemberUserRegistration registration) {
+        if (repository.existsByUsername(registration.getUsername()))
+            throw new UsernameConflictException();
         Member member = memberService.getMemberByMembershipId(registration.getMembershipId());
         if (!member.getApplicant().getSocialSecurity().endsWith(registration.getLastFourOfSSN()))
             throw new MemberNotFoundException();
-        if (memberUserRepository.existsByMembershipId(registration.getMembershipId()))
+        if (repository.existsByMembershipId(registration.getMembershipId()))
             throw new ConflictException("A user already exists with this membership.");
         String hashedPassword = passwordEncoder.encode(registration.getPassword());
         MemberUser user = MemberUser.builder()

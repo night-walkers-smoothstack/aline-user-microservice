@@ -2,8 +2,13 @@ package com.aline.usermicroservice.service.registration;
 
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.ConflictException;
+import com.aline.core.exception.conflict.EmailConflictException;
+import com.aline.core.exception.conflict.UsernameConflictException;
 import com.aline.core.model.user.AdminUser;
 import com.aline.core.model.user.UserRole;
+import com.aline.core.repository.AdminUserRepository;
+import com.aline.core.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -18,6 +23,7 @@ import org.springframework.stereotype.Component;
 public class AdminUserRegistrationHandler implements UserRegistrationHandler<AdminUser, AdminUserRegistration> {
 
     private final PasswordEncoder passwordEncoder;
+    private final AdminUserRepository repository;
 
     @Override
     public Class<AdminUserRegistration> registersAs() {
@@ -26,14 +32,19 @@ public class AdminUserRegistrationHandler implements UserRegistrationHandler<Adm
 
     @Override
     public AdminUser register(AdminUserRegistration registration) {
+        if (repository.existsByUsername(registration.getUsername()))
+            throw new UsernameConflictException();
+        if (repository.existsByEmail(registration.getEmail()))
+            throw new EmailConflictException();
         String hashedPassword = passwordEncoder.encode(registration.getPassword());
-        return AdminUser.builder()
+        AdminUser user = AdminUser.builder()
                 .firstName(registration.getFirstName())
                 .lastName(registration.getLastName())
                 .email(registration.getEmail())
                 .username(registration.getUsername())
                 .password(hashedPassword)
                 .build();
+        return repository.save(user);
     }
 
     @Override
