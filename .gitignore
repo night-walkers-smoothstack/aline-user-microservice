@@ -15,8 +15,10 @@ target/
 *.properties
 application.yaml
 application.yml
+application-*.yml
 !*-test.properties
 !*-test.yml
+!openapi-config.properties
 
 ### IntelliJ IDEA ###
 .idea
