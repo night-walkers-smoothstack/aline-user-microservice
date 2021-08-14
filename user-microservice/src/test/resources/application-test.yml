@@ -7,7 +7,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-
     show-sql: true
     database-platform: "org.hibernate.dialect.H2Dialect"
   datasource:
@@ -18,3 +17,10 @@ spring:
   jackson:
     serialization:
       INDENT_OUTPUT: true
+
+app:
+  email:
+    from: "no-reply@alinefinancial.com"
+    enable: true
+  security:
+    secret-key: "ThisIsAGreatSecretKey!!!"

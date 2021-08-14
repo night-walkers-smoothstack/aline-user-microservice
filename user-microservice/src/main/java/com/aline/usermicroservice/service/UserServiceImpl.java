@@ -117,4 +117,11 @@ public class UserServiceImpl implements UserService {
         val handler = handlerMap.get(registration.getClass());
         return handler.mapToResponse(handler.register(registration));
     }
+
+    @Override
+    public void enableUser(Long id) {
+        User user = repository.findById(id).orElseThrow(UserNotFoundException::new);
+        user.setEnabled(true);
+        repository.save(user);
+    }
 }

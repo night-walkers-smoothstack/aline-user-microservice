@@ -12,4 +12,5 @@ public interface UserService {
     UserResponse getUserById(Long id);
     PaginatedResponse<UserResponse> getAllUsers(Pageable pageable, String search);
     UserResponse registerUser(UserRegistration registration);
+    void enableUser(Long id);
 }
