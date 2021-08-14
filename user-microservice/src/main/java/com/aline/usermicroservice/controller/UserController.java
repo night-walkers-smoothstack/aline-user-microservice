@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,7 @@ import java.net.URI;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Slf4j(topic = "User Controller")
 public class UserController {
 
     @Value("${server.port}")
@@ -82,7 +84,9 @@ public class UserController {
         // Create a registration token for a member user when registration is successful.
         UserResponse response = userService.registerUser(registration, user -> {
             if (UserRole.valueOf(user.getRole().toUpperCase()) == UserRole.MEMBER) {
-                confirmationService.createRegistrationToken(user);
+                UserRegistrationToken token = confirmationService.createRegistrationToken(user);
+                String tokenString = token.getToken().toString();
+                log.info("User registration token created for '{}' - Token: {}", user.getUsername(), tokenString);
             }
         });
         URI location = ServletUriComponentsBuilder

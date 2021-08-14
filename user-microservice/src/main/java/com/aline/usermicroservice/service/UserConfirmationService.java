@@ -28,12 +28,12 @@ public class UserConfirmationService {
      * @param user The user to create a token for.
      * @return The token created for the user.
      */
-    public void createRegistrationToken(@NonNull User user) {
+    public UserRegistrationToken createRegistrationToken(@NonNull User user) {
         if (user.isEnabled())
             throw new NotCreatedException("Cannot create a registration confirmation token for a user that is already enabled.");
         UserRegistrationToken token = new UserRegistrationToken();
         token.setUser(user);
-        repository.save(token);
+        return repository.save(token);
     }
 
     /**

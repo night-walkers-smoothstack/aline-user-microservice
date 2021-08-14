@@ -154,18 +154,30 @@ public class UsersIntegrationTest {
         UserRegistrationToken token = tokenRepository.findByUserId(user.getId()).orElse(null);
 
         assertNotNull(token);
+    }
+
+    @Test
+    void test_confirmUserRegistration_enables_user_when_token_is_valid_and_user_exists() throws Exception {
+        // Create user first.
+        User user = createDefaultMemberUser("testboy", "P@ssword123");
+
+        assertNotNull(user);
+
+        UserRegistrationToken token = tokenRepository.findByUserId(user.getId()).orElse(null);
+
+        assertNotNull(token);
 
         String tokenString = token.getToken().toString();
 
         ConfirmUserRegistration confirmUserRegistration = ConfirmUserRegistration.builder()
-                        .token(tokenString)
-                                .build();
+                .token(tokenString)
+                .build();
 
         String body = mapper.writeValueAsString(confirmUserRegistration);
 
         mockMvc.perform(post("/users/confirmation")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
                 .andExpect(jsonPath("$.enabled").value(true))
                 .andDo(print());
