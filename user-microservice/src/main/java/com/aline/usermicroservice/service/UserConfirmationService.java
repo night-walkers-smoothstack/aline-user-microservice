@@ -1,18 +1,18 @@
 package com.aline.usermicroservice.service;
 
-import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.NotCreatedException;
+import com.aline.core.exception.gone.TokenExpiredException;
+import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
-import com.aline.core.repository.UserRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +40,24 @@ public class UserConfirmationService {
      */
     @Transactional(rollbackOn = UserNotFoundException.class)
     public void confirmRegistration(@NonNull UserRegistrationToken token) {
-        userService.enableUser(token.getUser().getId());
+        if (token.isExpired()) {
+            repository.delete(token);
+            throw new TokenExpiredException();
+        }
+        User user = userService.getUserByToken(token);
+        userService.enableUser(user.getId());
         repository.delete(token);
+    }
+
+    /**
+     * Get token by ID
+     * @param id The string id that will be converted into a UUID.
+     * @return The token that is found with that ID.
+     * @throws TokenNotFoundException If the token does not exist.
+     */
+    public UserRegistrationToken getTokenById(String id) {
+        UUID uuid = UUID.fromString(id);
+        return repository.findById(uuid).orElseThrow(TokenNotFoundException::new);
     }
 
 }

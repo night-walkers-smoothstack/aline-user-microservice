@@ -5,6 +5,7 @@ import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.user.User;
+import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
@@ -123,5 +124,15 @@ public class UserServiceImpl implements UserService {
         User user = repository.findById(id).orElseThrow(UserNotFoundException::new);
         user.setEnabled(true);
         repository.save(user);
+    }
+
+    /**
+     * Find a user by a registration token.
+     * @param token The token associated with the user.
+     * @return The user that was associated with the passed token.
+     */
+    @Override
+    public User getUserByToken(UserRegistrationToken token) {
+        return repository.findByToken(token).orElseThrow(UserNotFoundException::new);
     }
 }

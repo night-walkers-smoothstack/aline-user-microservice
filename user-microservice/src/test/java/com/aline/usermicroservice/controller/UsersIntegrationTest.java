@@ -1,19 +1,30 @@
 package com.aline.usermicroservice.controller;
 
 import com.aline.core.dto.request.AdminUserRegistration;
+import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
+import com.aline.core.dto.response.UserResponse;
+import com.aline.core.model.user.User;
+import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.repository.UserRegistrationTokenRepository;
+import com.aline.core.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import javax.transaction.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -22,10 +33,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DisplayName("User Controller Integration Test")
+@Slf4j(topic = "Users Integration Test")
+@DisplayName("Users Integration Test")
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
-public class UserControllerTest {
+public class UsersIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -33,22 +45,16 @@ public class UserControllerTest {
     @Autowired
     ObjectMapper mapper;
 
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    UserRegistrationTokenRepository tokenRepository;
+
     @Test
     void test_registerUser_status_isCreated_and_location_is_in_header_when_register_memberUser() throws Exception {
-        MemberUserRegistration memberUserRegistration =
-                MemberUserRegistration.builder()
-                        .username("member")
-                        .password("P@ssword123")
-                        .membershipId("12345678")
-                        .lastFourOfSSN("2222")
-                        .build();
-        String memberBody = mapper.writeValueAsString(memberUserRegistration);
-        mockMvc.perform(post("/users/registration")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(memberBody))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("member"))
-                .andDo(print());
+        // Create user first.
+        createDefaultMemberUser("testboy", "P@ssword123");
     }
 
     @Test
@@ -69,8 +75,7 @@ public class UserControllerTest {
                 .andExpect(header().exists("location"))
                 .andExpect(jsonPath("$.username").value("adminboy"))
                 .andExpect(jsonPath("$.firstName").value("Admin"))
-                .andExpect(jsonPath("$.lastName").value("Boy"))
-                .andDo(print());
+                .andExpect(jsonPath("$.lastName").value("Boy"));
     }
 
     @Test
@@ -87,8 +92,7 @@ public class UserControllerTest {
         mockMvc.perform(post("/users/registration")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(memberBody))
-                .andExpect(status().isNotFound())
-                .andDo(print());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -105,8 +109,7 @@ public class UserControllerTest {
         mockMvc.perform(post("/users/registration")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(memberBody))
-                .andExpect(status().isNotFound())
-                .andDo(print());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -123,8 +126,7 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(memberBody))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("member"))
-                .andDo(print());
+                .andExpect(jsonPath("$.username").value("member"));
 
         MemberUserRegistration alreadyExistsRegistration =
                 MemberUserRegistration.builder()
@@ -137,8 +139,64 @@ public class UserControllerTest {
         mockMvc.perform(post("/users/registration")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(memberBody2))
-                .andExpect(status().isConflict())
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void test_registerUser_creates_a_userRegistrationToken() throws Exception {
+
+        // Create user first.
+        User user = createDefaultMemberUser("testboy", "P@ssword123");
+
+        assertNotNull(user);
+
+        UserRegistrationToken token = tokenRepository.findByUserId(user.getId()).orElse(null);
+
+        assertNotNull(token);
+
+        String tokenString = token.getToken().toString();
+
+        ConfirmUserRegistration confirmUserRegistration = ConfirmUserRegistration.builder()
+                        .token(tokenString)
+                                .build();
+
+        String body = mapper.writeValueAsString(confirmUserRegistration);
+
+        mockMvc.perform(post("/users/confirmation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(jsonPath("$.username").value(user.getUsername()))
+                .andExpect(jsonPath("$.enabled").value(true))
                 .andDo(print());
+    }
+
+    /**
+     * Create a default user with the first member in
+     * the members.sql
+     * @throws Exception No exception handling in tests.
+     */
+    private User createDefaultMemberUser(String username, String password) throws Exception {
+        MemberUserRegistration memberUserRegistration =
+                MemberUserRegistration.builder()
+                        .username(username)
+                        .password(password)
+                        .membershipId("12345678")
+                        .lastFourOfSSN("2222")
+                        .build();
+        String memberBody = mapper.writeValueAsString(memberUserRegistration);
+        MvcResult result = mockMvc.perform(post("/users/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(memberBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value(username))
+                .andReturn();
+
+        MockHttpServletResponse response = result.getResponse();
+        UserResponse userResponse = mapper.readValue(response.getContentAsString(), UserResponse.class);
+
+        log.info("User ID: {}", userResponse.getId());
+
+        return userRepository.findById(userResponse.getId()).orElse(null);
     }
 
 }
