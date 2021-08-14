@@ -86,10 +86,6 @@
             <artifactId>spring-security-crypto</artifactId>
             <version>5.5.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-dynamodb</artifactId>
-        </dependency>
     </dependencies>
 
     <dependencyManagement>
