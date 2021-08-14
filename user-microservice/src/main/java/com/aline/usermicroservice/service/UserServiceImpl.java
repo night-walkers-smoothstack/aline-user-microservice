@@ -4,16 +4,19 @@ import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
+import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -114,9 +117,17 @@ public class UserServiceImpl implements UserService {
      * @return A UserResponse returned from the handler.
      */
     @Override
-    public UserResponse registerUser(@Valid UserRegistration registration) {
+    public UserResponse registerUser(@Valid UserRegistration registration, @Nullable UserRegistrationConsumer consumer) {
         val handler = handlerMap.get(registration.getClass());
-        return handler.mapToResponse(handler.register(registration));
+        User registered = handler.register(registration);
+        if (consumer != null)
+            consumer.onRegistrationComplete(registered);
+        return handler.mapToResponse(registered);
+    }
+
+    @Override
+    public UserResponse registerUser(@Valid UserRegistration registration) {
+        return registerUser(registration, null);
     }
 
     @Override

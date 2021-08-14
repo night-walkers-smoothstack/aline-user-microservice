@@ -1,8 +1,13 @@
 package com.aline.usermicroservice.controller;
 
+import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.UserRegistration;
+import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.model.user.UserRole;
+import com.aline.usermicroservice.service.UserConfirmationService;
 import com.aline.usermicroservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,6 +41,7 @@ public class UserController {
     private int port;
 
     private final UserService userService;
+    private final UserConfirmationService confirmationService;
 
     @Operation(description = "Get a user by ID")
     @ApiResponses({
@@ -73,7 +79,12 @@ public class UserController {
     })
     @PostMapping("/registration")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRegistration registration) {
-        UserResponse response = userService.registerUser(registration);
+        // Create a registration token for a member user when registration is successful.
+        UserResponse response = userService.registerUser(registration, user -> {
+            if (UserRole.valueOf(user.getRole().toUpperCase()) == UserRole.MEMBER) {
+                confirmationService.createRegistrationToken(user);
+            }
+        });
         URI location = ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/users/{id}")
@@ -82,6 +93,23 @@ public class UserController {
                 .toUri();
         return ResponseEntity
                 .created(location)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
+    }
+
+    /**
+     * Confirms the registration of a user and enables their account.
+     * @param confirmUserRegistration The confirm registration dto sent from the front-end
+     * @return ConfirmUserRegistrationResponse ResponseEntity
+     */
+    @PostMapping("/confirmation")
+    public ResponseEntity<ConfirmUserRegistrationResponse> confirmUserRegistration(@RequestBody ConfirmUserRegistration confirmUserRegistration) {
+
+        UserRegistrationToken token = confirmationService.getTokenById(confirmUserRegistration.getToken());
+        ConfirmUserRegistrationResponse response = confirmationService.confirmRegistration(token);
+
+        return ResponseEntity
+                .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response);
     }

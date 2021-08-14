@@ -18,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @Slf4j(topic = "Users Integration Test")
@@ -54,7 +56,7 @@ public class UsersIntegrationTest {
     @Test
     void test_registerUser_status_isCreated_and_location_is_in_header_when_register_memberUser() throws Exception {
         // Create user first.
-        createDefaultMemberUser("testboy", "P@ssword123");
+        createDefaultMemberUser("member", "P@ssword321");
     }
 
     @Test
@@ -144,7 +146,6 @@ public class UsersIntegrationTest {
 
     @Test
     void test_registerUser_creates_a_userRegistrationToken() throws Exception {
-
         // Create user first.
         User user = createDefaultMemberUser("testboy", "P@ssword123");
 
@@ -173,6 +174,7 @@ public class UsersIntegrationTest {
     /**
      * Create a default user with the first member in
      * the members.sql
+     * @return The user grabbed from the MockMVC test results.
      * @throws Exception No exception handling in tests.
      */
     private User createDefaultMemberUser(String username, String password) throws Exception {

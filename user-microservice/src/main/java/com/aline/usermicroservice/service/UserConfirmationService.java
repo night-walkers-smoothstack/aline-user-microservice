@@ -1,5 +1,6 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.exception.NotCreatedException;
 import com.aline.core.exception.gone.TokenExpiredException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -26,12 +28,12 @@ public class UserConfirmationService {
      * @param user The user to create a token for.
      * @return The token created for the user.
      */
-    public UserRegistrationToken createRegistrationToken(@NonNull User user) {
+    public void createRegistrationToken(@NonNull User user) {
         if (user.isEnabled())
             throw new NotCreatedException("Cannot create a registration confirmation token for a user that is already enabled.");
         UserRegistrationToken token = new UserRegistrationToken();
         token.setUser(user);
-        return repository.save(token);
+        repository.save(token);
     }
 
     /**
@@ -39,7 +41,7 @@ public class UserConfirmationService {
      * @param token The token to access the user.
      */
     @Transactional(rollbackOn = UserNotFoundException.class)
-    public void confirmRegistration(@NonNull UserRegistrationToken token) {
+    public ConfirmUserRegistrationResponse confirmRegistration(@NonNull UserRegistrationToken token) {
         if (token.isExpired()) {
             repository.delete(token);
             throw new TokenExpiredException();
@@ -47,6 +49,12 @@ public class UserConfirmationService {
         User user = userService.getUserByToken(token);
         userService.enableUser(user.getId());
         repository.delete(token);
+
+        return ConfirmUserRegistrationResponse.builder()
+                .username(user.getUsername())
+                .confirmedAt(LocalDateTime.now())
+                .enabled(user.isEnabled())
+                .build();
     }
 
     /**
