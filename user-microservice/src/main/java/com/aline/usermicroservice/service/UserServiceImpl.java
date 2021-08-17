@@ -4,9 +4,11 @@ import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.Applicant;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.model.user.UserRole;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
@@ -86,11 +88,32 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Helper method to map a user to a user response.
+     * <br/>
+     * If the user has a role of MEMBER then it will
+     * reach into the MemberUser's linked applicant
+     * to retrieve the properties <code>firstName</code>,
+     * <code>lastName</code>, and <code>email</code>.
      * @param user User to map.
      * @return A UserResponse mapped from a User entity.
      */
     protected UserResponse mapToDto(User user) {
-        return modelMapper.map(user, UserResponse.class);
+        UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+
+        if (UserRole.valueOf(user.getRole().toUpperCase()) == UserRole.MEMBER) {
+            MemberUser memberUser = (MemberUser) user;
+
+            Applicant applicant = memberUser.getMember().getApplicant();
+
+            String firstName = applicant.getFirstName();
+            String lastName = applicant.getLastName();
+            String email = applicant.getEmail();
+
+            userResponse.setFirstName(firstName);
+            userResponse.setLastName(lastName);
+            userResponse.setEmail(email);
+        }
+
+        return userResponse;
     }
 
     /**
