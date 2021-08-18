@@ -4,13 +4,13 @@ import com.aline.core.aws.email.EmailService;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
+import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static com.aline.core.dto.request.MemberUserRegistration.MemberUserRegistrationBuilder;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -96,7 +98,7 @@ class UserIntegrationTest {
 
     @Nested
     @DisplayName("User Registration")
-    class UserRegistration {
+    class UserRegistrationTest {
         @Test
         void test_registerUser_status_isCreated_and_location_is_in_header_when_register_memberUser() throws Exception {
             // Create user first.
@@ -188,6 +190,117 @@ class UserIntegrationTest {
                     .andExpect(status().isConflict());
         }
 
+        // For validation
+        MemberUserRegistrationBuilder<
+                ? extends MemberUserRegistration,
+                ? extends MemberUserRegistrationBuilder<?, ?>> cr; // Correct registration
+
+        @Test
+        void test_registrationIsValid() throws Exception {
+            cr = MemberUserRegistration.builder()
+                    .username("member")
+                    .password("P@ssword123")
+                    .membershipId("12345678")
+                    .lastFourOfSSN("2222");
+            expectValid(cr.build());
+        }
+
+        @Nested
+        @DisplayName("Registration is invalid when")
+        class RegistrationIsInvalid {
+
+            @BeforeEach
+            void setUp() {
+                cr = MemberUserRegistration.builder()
+                        .username("member")
+                        .password("P@ssword123")
+                        .membershipId("12345678")
+                        .lastFourOfSSN("2222");
+            }
+
+            @Test
+            void usernameIsNull() throws Exception {
+                expectInvalid(cr.username(null).build());
+            }
+
+            @Test
+            void usernameIsBlank() throws Exception {
+                expectInvalid(cr.username("").build());
+            }
+
+            @Test
+            void usernameIncludesInvalidCharacters() throws Exception {
+                expectInvalid(cr.username("username*&").build());
+            }
+
+            @Test
+            void usernameTooShort() throws Exception {
+                // Too short meaning less than 6 characters
+                expectInvalid(cr.username("use").build());
+            }
+
+            @Test
+            void usernameTooLong() throws Exception {
+                // More than 20 characters is too long
+                expectInvalid(cr.username("abcdefghijklmnopqrstuvwxyz12345").build());
+            }
+
+            @Test
+            void usernameStartsWithNumber() throws Exception {
+                expectInvalid(cr.username("123username").build());
+            }
+
+            @Test
+            void usernameStartsWithSpecialCharacter() throws Exception {
+                expectInvalid(cr.username("__username").build());
+            }
+
+            @Test
+            void passwordIsNull() throws Exception {
+                expectInvalid(cr.password(null).build());
+            }
+
+            @Test
+            void passwordIsBlank() throws Exception {
+                expectInvalid(cr.password("").build());
+            }
+
+            @Test
+            void passwordContainsNoCapitalLetters() throws Exception {
+                expectInvalid(cr.password("p@ssword123").build());
+            }
+
+            @Test
+            void passwordContainsNoLowercaseLetters() throws Exception {
+                expectInvalid(cr.password("P@SSWORD123").build());
+            }
+
+            @Test
+            void passwordContainsNoSpecialCharacters() throws Exception {
+                expectInvalid(cr.password("Password123").build());
+            }
+
+            @Test
+            void passwordContainsNoNumbers() throws Exception {
+                expectInvalid(cr.password("P@ssword").build());
+            }
+
+            @Test
+            void passwordContainsOnlyNumbers() throws Exception {
+                expectInvalid(cr.password("12345678").build());
+            }
+
+            @Test
+            void passwordIsTooShort() throws Exception {
+                expectInvalid(cr.password("P@ss123").build());
+            }
+
+        }
+    }
+
+    @Nested
+    @DisplayName("User Registration Confirmation")
+    class UserRegistrationConfirmation {
         @Test
         void test_registerUser_creates_a_userRegistrationToken() throws Exception {
             // Create user first.
@@ -256,6 +369,22 @@ class UserIntegrationTest {
         log.info("User ID: {}", userResponse.getId());
 
         return userRepository.findById(userResponse.getId()).orElse(null);
+    }
+
+    private void expectValid(UserRegistration userRegistration) throws Exception {
+        String body = mapper.writeValueAsString(userRegistration);
+        mockMvc.perform(post("/users/registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isCreated());
+    }
+
+    private void expectInvalid(UserRegistration userRegistration) throws Exception {
+        String body = mapper.writeValueAsString(userRegistration);
+        mockMvc.perform(post("/users/registration")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest());
     }
 
 }

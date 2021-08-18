@@ -3,7 +3,7 @@ package com.aline.usermicroservice.service;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.config.AppConfig;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
-import com.aline.core.exception.NotCreatedException;
+import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.gone.TokenExpiredException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
@@ -37,7 +37,7 @@ public class UserConfirmationService {
      */
     public UserRegistrationToken createRegistrationToken(@NonNull User user) {
         if (user.isEnabled())
-            throw new NotCreatedException("Cannot create a registration confirmation token for a user that is already enabled.");
+            throw new UnprocessableException("Cannot create a registration confirmation token for a user that is already enabled.");
         UserRegistrationToken token = new UserRegistrationToken();
         token.setUser(user);
         return repository.save(token);
@@ -47,7 +47,10 @@ public class UserConfirmationService {
      * Confirm registration and delete the token.
      * @param token The token to access the user.
      */
-    @Transactional(rollbackOn = UserNotFoundException.class)
+    @Transactional(rollbackOn = {
+            UserNotFoundException.class,
+            UnprocessableException.class
+    })
     public ConfirmUserRegistrationResponse confirmRegistration(@NonNull UserRegistrationToken token) {
         if (token.isExpired()) {
             repository.delete(token);
@@ -85,6 +88,10 @@ public class UserConfirmationService {
         return repository.findByUserId(user.getId()).orElseThrow(TokenNotFoundException::new);
     }
 
+    /**
+     * Send the specified user a confirmation email.
+     * @param user The user to create and send a confirmation email to.
+     */
     public void sendMemberUserConfirmationEmail(MemberUser user) {
 
         final String username = user.getUsername();

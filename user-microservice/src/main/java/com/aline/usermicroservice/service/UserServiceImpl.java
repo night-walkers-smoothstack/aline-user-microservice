@@ -3,6 +3,7 @@ package com.aline.usermicroservice.service;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.Applicant;
 import com.aline.core.model.user.MemberUser;
@@ -156,6 +157,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void enableUser(Long id) {
         User user = repository.findById(id).orElseThrow(UserNotFoundException::new);
+        if (user.isEnabled())
+            throw new UnprocessableException("Cannot enable a user that is already enabled.");
         user.setEnabled(true);
         repository.save(user);
     }
