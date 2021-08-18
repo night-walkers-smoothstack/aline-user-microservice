@@ -3,6 +3,7 @@ package com.aline.usermicroservice.service;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.config.AppConfig;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
+import com.aline.core.exception.BadRequestException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.gone.TokenExpiredException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
@@ -74,8 +75,12 @@ public class UserConfirmationService {
      * @throws TokenNotFoundException If the token does not exist.
      */
     public UserRegistrationToken getTokenById(String id) {
-        UUID uuid = UUID.fromString(id);
-        return repository.findById(uuid).orElseThrow(TokenNotFoundException::new);
+        try  {
+            UUID uuid = UUID.fromString(id);
+            return repository.findById(uuid).orElseThrow(TokenNotFoundException::new);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Token format is invalid.");
+        }
     }
 
     /**
