@@ -1,28 +1,21 @@
 package com.aline.usermicroservice;
 
 import com.aline.core.aws.email.EmailService;
-import com.aline.core.config.AppConfig;
 import com.aline.core.model.Applicant;
 import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
-import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.usermicroservice.service.UserConfirmationService;
 import com.aline.usermicroservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -30,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
