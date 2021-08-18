@@ -5,6 +5,7 @@ import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
 import com.aline.usermicroservice.service.UserConfirmationService;
@@ -84,9 +85,7 @@ public class UserController {
         // Create a registration token for a member user when registration is successful.
         UserResponse response = userService.registerUser(registration, user -> {
             if (UserRole.valueOf(user.getRole().toUpperCase()) == UserRole.MEMBER) {
-                UserRegistrationToken token = confirmationService.createRegistrationToken(user);
-                String tokenString = token.getToken().toString();
-                log.info("User registration token created for '{}' - Token: {}", user.getUsername(), tokenString);
+                confirmationService.sendMemberUserConfirmationEmail((MemberUser) user);
             }
         });
         URI location = ServletUriComponentsBuilder

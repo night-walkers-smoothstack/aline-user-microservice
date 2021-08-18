@@ -24,3 +24,5 @@ app:
     enable: true
   security:
     secret-key: "ThisIsAGreatSecretKey!!!"
+  member-dashboard: "http://localhost:4200"
+  landing-portal: "http://localhost:3007"

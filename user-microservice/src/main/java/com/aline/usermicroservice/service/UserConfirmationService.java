@@ -1,10 +1,13 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.aws.email.EmailService;
+import com.aline.core.config.AppConfig;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.exception.NotCreatedException;
 import com.aline.core.exception.gone.TokenExpiredException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
@@ -14,13 +17,17 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.UUID;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class UserConfirmationService {
 
+    private final AppConfig appConfig;
     private final UserService userService;
+    private final EmailService emailService;
     private final UserRegistrationTokenRepository repository;
 
     /**
@@ -66,6 +73,34 @@ public class UserConfirmationService {
     public UserRegistrationToken getTokenById(String id) {
         UUID uuid = UUID.fromString(id);
         return repository.findById(uuid).orElseThrow(TokenNotFoundException::new);
+    }
+
+    /**
+     * Get token by user
+     * @param user The user the token is being queried for
+     * @return The token that is found linked to the user.
+     * @throws TokenNotFoundException If the token does not exist.
+     */
+    public UserRegistrationToken getTokenByUser(@NonNull User user) {
+        return repository.findByUserId(user.getId()).orElseThrow(TokenNotFoundException::new);
+    }
+
+    public void sendMemberUserConfirmationEmail(MemberUser user) {
+
+        final String username = user.getUsername();
+        final String subject = String.format("We Need Your Confirmation, %s", username);
+        final String template = "user/confirm-registration";
+        final String email = user.getMember().getApplicant().getEmail();
+        final String memberDashboardUrl = appConfig.getMemberDashboard();
+        final String landingPortalUrl = appConfig.getLandingPortal();
+        final String token = createRegistrationToken(user).getToken().toString();
+        final String confirmationLink = String.format("%s/confirmation?token=%s", memberDashboardUrl, token);
+
+        final Map<String, String> variables = new HashMap<>();
+        variables.put("landingPortalUrl", landingPortalUrl);
+        variables.put("confirmationLink", confirmationLink);
+
+        emailService.sendHtmlEmail(subject, template, email, variables);
     }
 
 }

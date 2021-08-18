@@ -1,5 +1,6 @@
 package com.aline.usermicroservice.controller;
 
+import com.aline.core.aws.email.EmailService;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,6 +31,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import javax.transaction.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -46,6 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class UserIntegrationTest {
 
+    @MockBean
+    EmailService emailService;
+
     @Autowired
     MockMvc mockMvc;
 
@@ -57,6 +64,12 @@ class UserIntegrationTest {
 
     @Autowired
     UserRegistrationTokenRepository tokenRepository;
+
+    @BeforeEach
+    void setUp() {
+        // Keep emails from sending during integration test. (Don't pull an HBO Max)
+        doNothing().when(emailService).sendHtmlEmail(any(), any(), any(), any());
+    }
 
     @Test
     void test_getUserById_status_isOk_when_user_exists() throws Exception {
