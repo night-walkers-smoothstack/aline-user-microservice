@@ -3,16 +3,23 @@ package com.aline.usermicroservice.service;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.Applicant;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
+import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.model.user.UserRole;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
+import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -82,11 +89,32 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Helper method to map a user to a user response.
+     * <br/>
+     * If the user has a role of MEMBER then it will
+     * reach into the MemberUser's linked applicant
+     * to retrieve the properties <code>firstName</code>,
+     * <code>lastName</code>, and <code>email</code>.
      * @param user User to map.
      * @return A UserResponse mapped from a User entity.
      */
     protected UserResponse mapToDto(User user) {
-        return modelMapper.map(user, UserResponse.class);
+        UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+
+        if (UserRole.valueOf(user.getRole().toUpperCase()) == UserRole.MEMBER) {
+            MemberUser memberUser = (MemberUser) user;
+
+            Applicant applicant = memberUser.getMember().getApplicant();
+
+            String firstName = applicant.getFirstName();
+            String lastName = applicant.getLastName();
+            String email = applicant.getEmail();
+
+            userResponse.setFirstName(firstName);
+            userResponse.setLastName(lastName);
+            userResponse.setEmail(email);
+        }
+
+        return userResponse;
     }
 
     /**
@@ -113,8 +141,35 @@ public class UserServiceImpl implements UserService {
      * @return A UserResponse returned from the handler.
      */
     @Override
-    public UserResponse registerUser(@Valid UserRegistration registration) {
+    public UserResponse registerUser(@Valid UserRegistration registration, @Nullable UserRegistrationConsumer consumer) {
         val handler = handlerMap.get(registration.getClass());
-        return handler.mapToResponse(handler.register(registration));
+        User registered = handler.register(registration);
+        if (consumer != null)
+            consumer.onRegistrationComplete(registered);
+        return handler.mapToResponse(registered);
+    }
+
+    @Override
+    public UserResponse registerUser(@Valid UserRegistration registration) {
+        return registerUser(registration, null);
+    }
+
+    @Override
+    public void enableUser(Long id) {
+        User user = repository.findById(id).orElseThrow(UserNotFoundException::new);
+        if (user.isEnabled())
+            throw new UnprocessableException("Cannot enable a user that is already enabled.");
+        user.setEnabled(true);
+        repository.save(user);
+    }
+
+    /**
+     * Find a user by a registration token.
+     * @param token The token associated with the user.
+     * @return The user that was associated with the passed token.
+     */
+    @Override
+    public User getUserByToken(UserRegistrationToken token) {
+        return repository.findByToken(token).orElseThrow(UserNotFoundException::new);
     }
 }

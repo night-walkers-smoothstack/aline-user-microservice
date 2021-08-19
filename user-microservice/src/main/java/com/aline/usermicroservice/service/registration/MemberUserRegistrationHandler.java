@@ -3,6 +3,7 @@ package com.aline.usermicroservice.service.registration;
 import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.ConflictException;
+import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.conflict.UsernameConflictException;
 import com.aline.core.exception.notfound.MemberNotFoundException;
 import com.aline.core.model.Member;
@@ -34,7 +35,7 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
         return MemberUserRegistration.class;
     }
 
-    @Transactional(rollbackOn = {MemberNotFoundException.class, ConflictException.class, UsernameConflictException.class})
+    @Transactional(rollbackOn = {MemberNotFoundException.class, ConflictException.class, UsernameConflictException.class, UnprocessableException.class})
     @Override
     public MemberUser register(MemberUserRegistration registration) {
         if (repository.existsByUsername(registration.getUsername()))
@@ -50,6 +51,7 @@ public class MemberUserRegistrationHandler implements UserRegistrationHandler<Me
                 .password(hashedPassword)
                 .member(member)
                 .build();
+
         return repository.save(user);
     }
 
