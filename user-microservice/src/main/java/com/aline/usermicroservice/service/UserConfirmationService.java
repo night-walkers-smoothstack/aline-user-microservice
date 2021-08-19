@@ -14,6 +14,7 @@ import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j(topic = "User Confirmation Service")
 public class UserConfirmationService {
 
     private final AppConfig appConfig;
@@ -53,6 +55,7 @@ public class UserConfirmationService {
             UnprocessableException.class
     })
     public ConfirmUserRegistrationResponse confirmRegistration(@NonNull UserRegistrationToken token) {
+        log.info("Confirming registration token: {}", token);
         if (token.isExpired()) {
             repository.delete(token);
             throw new TokenExpiredException();
@@ -116,3 +119,4 @@ public class UserConfirmationService {
     }
 
 }
+
