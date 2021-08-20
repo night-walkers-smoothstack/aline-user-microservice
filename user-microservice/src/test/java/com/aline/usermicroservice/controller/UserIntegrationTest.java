@@ -4,6 +4,8 @@ import com.aline.core.aws.email.EmailService;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
+import com.aline.core.dto.request.ResetPasswordAuthentication;
+import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
@@ -11,6 +13,7 @@ import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
+import com.aline.core.util.RandomNumberGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,8 +37,10 @@ import static com.aline.core.dto.request.MemberUserRegistration.MemberUserRegist
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -338,6 +343,82 @@ class UserIntegrationTest {
                     .andExpect(jsonPath("$.enabled").value(true))
                     .andDo(print());
         }
+    }
+
+    @Nested
+    @DisplayName("Password Reset Test")
+    class PasswordResetTest {
+
+        @MockBean
+        RandomNumberGenerator rng;
+
+        @BeforeEach
+        void setUp() {
+            when(rng.generateRandomNumberString(6)).thenReturn("123456");
+        }
+
+        @Test
+        void status_isOk_when_OTP_is_correct() throws Exception {
+
+            createDefaultMemberUser("john_smith");
+
+            ResetPasswordAuthentication authentication = ResetPasswordAuthentication
+                    .builder()
+                    .username("john_smith")
+                    .email("johnsmith@email.com").build();
+
+            String body = mapper.writeValueAsString(authentication);
+
+            // Create new password reset one-time password for the user
+            mockMvc.perform(post("/users/password-reset-otp")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(body))
+                    .andExpect(status().isOk());
+
+            ResetPasswordRequest request = ResetPasswordRequest.builder()
+                    .username("john_smith")
+                    .otp("123456")
+                    .newPassword("NewP@ssword123").build();
+            String requestBody = mapper.writeValueAsString(request);
+
+            // Create new password reset request for the user
+            mockMvc.perform(put("/users/password-reset")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
+        void status_isConflict_if_password_is_the_same_as_old_password() throws Exception {
+
+            createDefaultMemberUser("john_smith");
+
+            ResetPasswordAuthentication authentication = ResetPasswordAuthentication
+                    .builder()
+                    .username("john_smith")
+                    .email("johnsmith@email.com").build();
+
+            String body = mapper.writeValueAsString(authentication);
+
+            // Create new password reset one-time password for the user
+            mockMvc.perform(post("/users/password-reset-otp")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isOk());
+
+            ResetPasswordRequest request = ResetPasswordRequest.builder()
+                    .username("john_smith")
+                    .otp("123456")
+                    .newPassword("NewP@ssword123").build();
+            String requestBody = mapper.writeValueAsString(request);
+
+            // Create new password reset request for the user
+            mockMvc.perform(put("/users/password-reset")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isOk());
+        }
+
     }
 
     /**
