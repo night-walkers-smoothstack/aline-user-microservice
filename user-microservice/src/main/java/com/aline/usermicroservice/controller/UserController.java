@@ -1,6 +1,8 @@
 package com.aline.usermicroservice.controller;
 
 import com.aline.core.dto.request.ConfirmUserRegistration;
+import com.aline.core.dto.request.ResetPasswordAuthentication;
+import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
@@ -8,6 +10,7 @@ import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
+import com.aline.usermicroservice.service.ResetPasswordService;
 import com.aline.usermicroservice.service.UserConfirmationService;
 import com.aline.usermicroservice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,6 +49,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserConfirmationService confirmationService;
+    private final ResetPasswordService passwordService;
 
     @Operation(description = "Get a user by ID")
     @ApiResponses({
@@ -115,6 +120,19 @@ public class UserController {
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response);
+    }
+
+    @PostMapping("/password-reset-otp")
+    public ResponseEntity<Void> createPasswordResetOtp(@RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
+        passwordService.createResetPasswordRequest(resetPasswordAuthentication,
+                (otp, user) -> log.info("Send password reset email to {}. OTP is {}", user.getUsername(), otp));
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/password-reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        passwordService.resetPassword(request);
+        return ResponseEntity.ok().build();
     }
 
 }

@@ -2,7 +2,7 @@ package com.aline.usermicroservice.service;
 
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
-import com.aline.core.exception.UnauthorizedException;
+import com.aline.core.exception.ForbiddenException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
@@ -16,6 +16,7 @@ import com.aline.core.repository.UserRepository;
 import com.aline.core.util.RandomNumberGenerator;
 import com.aline.usermicroservice.service.function.HandleOtpBeforeHash;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import javax.validation.Valid;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j(topic = "Reset Password Service")
 public class ResetPasswordService {
 
     private final PasswordEncoder passwordEncoder;
@@ -36,30 +38,38 @@ public class ResetPasswordService {
             UserNotFoundException.class,
             UnprocessableException.class
     })
-    public OneTimePasscode createResetPasswordRequest(ResetPasswordAuthentication authentication, @Nullable HandleOtpBeforeHash handleOtpBeforeHash) {
+    public void createResetPasswordRequest(ResetPasswordAuthentication authentication, @Nullable HandleOtpBeforeHash handleOtpBeforeHash) {
+        log.info("Finding user with username {}", authentication.getUsername());
         User user = userRepository.findByUsername(authentication.getUsername())
                 .orElseThrow(UserNotFoundException::new);
         if (user.getUserRole() == UserRole.MEMBER) {
             MemberUser memberUser = (MemberUser) user;
-            if (memberUser.getMember().getApplicant().getEmail().equals(authentication.getEmail())) {
+            log.info("Finding member user with email: {}", authentication.getEmail());
+            if (!memberUser.getMember().getApplicant().getEmail().equals(authentication.getEmail())) {
                 throw new UserNotFoundException();
             }
         } else if (user.getUserRole() == UserRole.ADMINISTRATOR) {
+            log.info("Finding member user with email: {}", authentication.getEmail());
             AdminUser adminUser = (AdminUser) user;
             if (adminUser.getEmail().equals(authentication.getEmail())) {
                 throw new UserNotFoundException();
             }
         }
         String otpStr = rng.generateRandomNumberString(6);
+
+        log.info("Hashing OTP for password reset...");
         String hashedOtp = passwordEncoder.encode(otpStr);
         OneTimePasscode otp = OneTimePasscode.builder()
                 .otp(hashedOtp)
                 .user(user)
                 .build();
         if (handleOtpBeforeHash != null) {
+            log.info("Handling OTP before it was hashed...");
             handleOtpBeforeHash.handle(otpStr, user);
         }
-        return repository.save(otp);
+
+        log.info("Saving OTP...");
+        repository.save(otp);
     }
 
     @Transactional(rollbackOn = {
@@ -74,8 +84,8 @@ public class ResetPasswordService {
         if (!user.getUsername().equals(request.getUsername()))
             throw new UnprocessableException("Cannot use this OTP for this action.");
 
-        if (!passwordEncoder.matches(otp.getOtp(), request.getOtp()))
-            throw new UnauthorizedException("One-time password is incorrect.");
+        if (!passwordEncoder.matches(request.getOtp(), otp.getOtp()))
+            throw new ForbiddenException("One-time password is incorrect.");
 
         String hashedNewOtp = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(hashedNewOtp);

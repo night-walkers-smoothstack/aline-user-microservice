@@ -59,6 +59,9 @@ class UserIntegrationTest {
     @MockBean
     EmailService emailService;
 
+    @MockBean
+    RandomNumberGenerator rng;
+
     @Autowired
     MockMvc mockMvc;
 
@@ -349,9 +352,6 @@ class UserIntegrationTest {
     @DisplayName("Password Reset Test")
     class PasswordResetTest {
 
-        @MockBean
-        RandomNumberGenerator rng;
-
         @BeforeEach
         void setUp() {
             when(rng.generateRandomNumberString(6)).thenReturn("123456");
@@ -389,7 +389,7 @@ class UserIntegrationTest {
         }
 
         @Test
-        void status_isConflict_if_password_is_the_same_as_old_password() throws Exception {
+        void status_isForbidden_when_OTP_is_notCorrect() throws Exception {
 
             createDefaultMemberUser("john_smith");
 
@@ -408,7 +408,7 @@ class UserIntegrationTest {
 
             ResetPasswordRequest request = ResetPasswordRequest.builder()
                     .username("john_smith")
-                    .otp("123456")
+                    .otp("654321")
                     .newPassword("NewP@ssword123").build();
             String requestBody = mapper.writeValueAsString(request);
 
@@ -416,7 +416,26 @@ class UserIntegrationTest {
             mockMvc.perform(put("/users/password-reset")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void status_isNotFound_when_user_does_not_exists() throws Exception {
+
+            createDefaultMemberUser("john_smith");
+
+            ResetPasswordAuthentication authentication = ResetPasswordAuthentication
+                    .builder()
+                    .username("big_boy_smith")
+                    .email("johnsmith@email.com").build();
+
+            String body = mapper.writeValueAsString(authentication);
+
+            // Create new password reset one-time password for the user
+            mockMvc.perform(post("/users/password-reset-otp")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isNotFound());
         }
 
     }
