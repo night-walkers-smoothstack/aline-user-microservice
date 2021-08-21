@@ -1,5 +1,7 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.aws.sms.SMSService;
+import com.aline.core.aws.sms.SMSType;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.exception.ForbiddenException;
@@ -33,6 +35,7 @@ public class ResetPasswordService {
     private final OneTimePasscodeRepository repository;
     private final UserRepository userRepository;
     private final RandomNumberGenerator rng;
+    private final SMSService smsService;
 
     @Transactional(rollbackOn = {
             UserNotFoundException.class,
@@ -70,6 +73,35 @@ public class ResetPasswordService {
 
         log.info("Saving OTP...");
         repository.save(otp);
+    }
+
+    /**
+     * Send OTP message to a user.
+     * @param otp The OTP generated.
+     * @param user The user being sent the OTP.
+     */
+    public void sendOTPMessage(String otp, User user) {
+
+        String phoneNumber = null;
+
+        switch (user.getUserRole()) {
+            case MEMBER:
+                phoneNumber = ((MemberUser) user).getMember()
+                        .getApplicant().getPhone();
+                break;
+            case ADMINISTRATOR:
+            case EMPLOYEE:
+                phoneNumber = ((AdminUser) user).getPhone();
+        }
+
+        if (phoneNumber != null) {
+            String message = String.format("Here is your password reset one-time passcode: %s", otp);
+            smsService.sendSMSMessage(phoneNumber, message, SMSType.TRANSACTIONAL);
+        } else {
+            log.info("No phone number was found to send this SMS message to.");
+            throw new UnprocessableException("No phone number was found to send this SMS message to.");
+        }
+
     }
 
     @Transactional(rollbackOn = {

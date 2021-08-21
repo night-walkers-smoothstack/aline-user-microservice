@@ -125,7 +125,10 @@ public class UserController {
     @PostMapping("/password-reset-otp")
     public ResponseEntity<Void> createPasswordResetOtp(@RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
-                (otp, user) -> log.info("Send password reset email to {}. OTP is {}", user.getUsername(), otp));
+                (otp, user) -> {
+                    log.info("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
+                    passwordService.sendOTPMessage(otp, user);
+                });
         return ResponseEntity.ok().build();
     }
 
