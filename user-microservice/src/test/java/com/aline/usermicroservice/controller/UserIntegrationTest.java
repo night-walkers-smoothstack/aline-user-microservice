@@ -7,6 +7,7 @@ import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
+import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.user.User;
@@ -365,7 +366,7 @@ class UserIntegrationTest {
             ResetPasswordAuthentication authentication = ResetPasswordAuthentication
                     .builder()
                     .username("john_smith")
-                    .email("johnsmith@email.com").build();
+                    .contactMethod(ContactMethod.PHONE).build();
 
             String body = mapper.writeValueAsString(authentication);
 
@@ -396,7 +397,7 @@ class UserIntegrationTest {
             ResetPasswordAuthentication authentication = ResetPasswordAuthentication
                     .builder()
                     .username("john_smith")
-                    .email("johnsmith@email.com").build();
+                    .contactMethod(ContactMethod.PHONE).build();
 
             String body = mapper.writeValueAsString(authentication);
 
@@ -427,7 +428,7 @@ class UserIntegrationTest {
             ResetPasswordAuthentication authentication = ResetPasswordAuthentication
                     .builder()
                     .username("big_boy_smith")
-                    .email("johnsmith@email.com").build();
+                    .contactMethod(ContactMethod.PHONE).build();
 
             String body = mapper.writeValueAsString(authentication);
 

@@ -5,6 +5,7 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
+import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
@@ -126,8 +127,15 @@ public class UserController {
     public ResponseEntity<Void> createPasswordResetOtp(@RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
                 (otp, user) -> {
-                    log.info("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
-                    passwordService.sendOTPMessage(otp, user);
+                    switch (resetPasswordAuthentication.getContactMethod()) {
+                        case PHONE:
+                            log.info("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
+                            passwordService.sendOTPMessage(otp, user);
+                            break;
+                        case EMAIL:
+                            log.info("Send password reset email to {}. OTP is {}", user.getUsername(), otp);
+                            break;
+                    }
                 });
         return ResponseEntity.ok().build();
     }

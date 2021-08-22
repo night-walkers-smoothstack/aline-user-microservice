@@ -45,19 +45,6 @@ public class ResetPasswordService {
         log.info("Finding user with username {}", authentication.getUsername());
         User user = userRepository.findByUsername(authentication.getUsername())
                 .orElseThrow(UserNotFoundException::new);
-        if (user.getUserRole() == UserRole.MEMBER) {
-            MemberUser memberUser = (MemberUser) user;
-            log.info("Finding member user with email: {}", authentication.getEmail());
-            if (!memberUser.getMember().getApplicant().getEmail().equals(authentication.getEmail())) {
-                throw new UserNotFoundException();
-            }
-        } else if (user.getUserRole() == UserRole.ADMINISTRATOR) {
-            log.info("Finding member user with email: {}", authentication.getEmail());
-            AdminUser adminUser = (AdminUser) user;
-            if (adminUser.getEmail().equals(authentication.getEmail())) {
-                throw new UserNotFoundException();
-            }
-        }
         String otpStr = rng.generateRandomNumberString(6);
 
         log.info("Hashing OTP for password reset...");
@@ -67,7 +54,7 @@ public class ResetPasswordService {
                 .user(user)
                 .build();
         if (handleOtpBeforeHash != null) {
-            log.info("Handling OTP before it was hashed...");
+            log.info("Handling OTP before it is hashed...");
             handleOtpBeforeHash.handle(otpStr, user);
         }
 
