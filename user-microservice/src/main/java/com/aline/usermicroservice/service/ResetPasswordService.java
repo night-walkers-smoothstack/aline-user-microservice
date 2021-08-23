@@ -12,7 +12,6 @@ import com.aline.core.model.OneTimePasscode;
 import com.aline.core.model.user.AdminUser;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
-import com.aline.core.model.user.UserRole;
 import com.aline.core.repository.OneTimePasscodeRepository;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.RandomNumberGenerator;
@@ -45,19 +44,33 @@ public class ResetPasswordService {
         log.info("Finding user with username {}", authentication.getUsername());
         User user = userRepository.findByUsername(authentication.getUsername())
                 .orElseThrow(UserNotFoundException::new);
+        // If user already has an OTP.
+        // Delete the current one and create another.
+        log.info("Delete OTP if user already has one.");
+        repository.deleteByUserId(user.getId());
+
         String otpStr = rng.generateRandomNumberString(6);
 
+        if (handleOtpBeforeHash != null) {
+            log.info("Handling OTP before it is hashed...");
+            handleOtpBeforeHash.handle(otpStr, user);
+        }
+
+        createOneTimePasscode(otpStr, user);
+    }
+
+    /**
+     * Create a OneTimePasscode entity.
+     * @param otpStr The One-Time Passcode string
+     * @param user The user to attach it to.
+     */
+    public void createOneTimePasscode(String otpStr, User user) {
         log.info("Hashing OTP for password reset...");
         String hashedOtp = passwordEncoder.encode(otpStr);
         OneTimePasscode otp = OneTimePasscode.builder()
                 .otp(hashedOtp)
                 .user(user)
                 .build();
-        if (handleOtpBeforeHash != null) {
-            log.info("Handling OTP before it is hashed...");
-            handleOtpBeforeHash.handle(otpStr, user);
-        }
-
         log.info("Saving OTP...");
         repository.save(otp);
     }

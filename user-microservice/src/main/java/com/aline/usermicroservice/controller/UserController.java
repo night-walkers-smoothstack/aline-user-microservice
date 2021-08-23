@@ -127,13 +127,14 @@ public class UserController {
     public ResponseEntity<Void> createPasswordResetOtp(@RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
                 (otp, user) -> {
+                    log.info("Contact Method: {}", resetPasswordAuthentication.getContactMethod());
                     switch (resetPasswordAuthentication.getContactMethod()) {
                         case PHONE:
-                            log.info("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
+                            log.debug("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
                             passwordService.sendOTPMessage(otp, user);
                             break;
                         case EMAIL:
-                            log.info("Send password reset email to {}. OTP is {}", user.getUsername(), otp);
+                            log.debug("Send password reset email to {}. OTP is {}", user.getUsername(), otp);
                             break;
                     }
                 });
