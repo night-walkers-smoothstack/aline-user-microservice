@@ -43,6 +43,7 @@ public class AdminUserRegistrationHandler implements UserRegistrationHandler<Adm
                 .lastName(registration.getLastName())
                 .email(registration.getEmail())
                 .username(registration.getUsername())
+                .phone(registration.getPhone())
                 .password(hashedPassword)
                 .build();
         return repository.save(user);

@@ -123,6 +123,7 @@ class UserIntegrationTest {
                             .lastName("Boy")
                             .username("adminboy")
                             .password("P@ssword123")
+                            .phone("(222) 222-2222")
                             .build();
             String adminBody = mapper.writeValueAsString(adminUserRegistration);
             mockMvc.perform(post("/users/registration")
