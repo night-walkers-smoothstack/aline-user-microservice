@@ -4,11 +4,14 @@ import com.aline.core.config.AppConfig;
 import com.aline.core.security.AuthenticationFilter;
 import com.aline.core.security.JwtTokenVerifier;
 import com.aline.core.security.service.SecurityUserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -21,6 +24,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import javax.crypto.SecretKey;
 import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,14 +39,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final SecurityUserService service;
     private final AppConfig appConfig;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationFilter filter;
     private final JwtTokenVerifier verifier;
+    private final SecretKey secretKey;
+    private final ObjectMapper objectMapper;
 
     @Override
+    @Autowired
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.jdbcAuthentication()
                 .dataSource(dataSource)
-                .usersByUsernameQuery("SELECT username, password, enabled, FROM user WHERE username = ?")
+                .usersByUsernameQuery("SELECT username, password, enabled FROM user WHERE username = ?")
                 .authoritiesByUsernameQuery("SELECT username, role, enabled FROM user WHERE username = ?")
                 .passwordEncoder(passwordEncoder);
     }
@@ -53,18 +59,26 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .addFilter(filter)
+                .addFilter(new AuthenticationFilter(authenticationManager(),
+                        appConfig, secretKey, objectMapper))
                 .addFilterAfter(verifier, AuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/v3/api-docs/**",
                         "/health",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
+                        "/users/**",
                         "/webjars/**",
                         "**/swagger-resources/**").permitAll()
                 .anyRequest()
                 .authenticated();
     }
+
+//    @Bean
+//    @Override
+//    public AuthenticationManager authenticationManagerBean() throws Exception {
+//        return super.authenticationManagerBean();
+//    }
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
