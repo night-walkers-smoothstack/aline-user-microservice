@@ -137,11 +137,12 @@ public class UserController {
                     log.info("Contact Method: {}", resetPasswordAuthentication.getContactMethod());
                     switch (resetPasswordAuthentication.getContactMethod()) {
                         case PHONE:
-                            log.debug("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
+                            log.info("Send password reset message to {}. OTP is {}", user.getUsername(), otp);
                             passwordService.sendOTPMessage(otp, user);
                             break;
                         case EMAIL:
-                            log.debug("Send password reset email to {}. OTP is {}", user.getUsername(), otp);
+                            log.info("Send password reset email to {}. OTP is {}", user.getUsername(), otp);
+                            passwordService.sendOTPEmail(otp, user);
                             break;
                     }
                 });

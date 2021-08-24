@@ -1,7 +1,9 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
 import com.aline.core.aws.sms.SMSType;
+import com.aline.core.config.AppConfig;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.exception.ForbiddenException;
@@ -26,6 +28,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +41,8 @@ public class ResetPasswordService {
     private final UserRepository userRepository;
     private final RandomNumberGenerator rng;
     private final SMSService smsService;
+    private final EmailService emailService;
+    private final AppConfig appConfig;
 
     @Transactional(rollbackOn = {
             UserNotFoundException.class,
@@ -108,14 +114,47 @@ public class ResetPasswordService {
                 phoneNumber = ((AdminUser) user).getPhone();
         }
 
-        if (phoneNumber != null) {
-            String message = String.format("Here is your password reset one-time passcode: %s", otp);
-            smsService.sendSMSMessage(phoneNumber, message, SMSType.TRANSACTIONAL);
-        } else {
+        if (phoneNumber == null) {
             log.info("No phone number was found to send this SMS message to.");
             throw new UnprocessableException("No phone number was found to send this SMS message to.");
         }
 
+        String message = String.format("Here is your password reset one-time passcode: %s", otp);
+        smsService.sendSMSMessage(phoneNumber, message, SMSType.TRANSACTIONAL);
+    }
+
+    /**
+     * Send OTP email to a user.
+     * @param otp The OTP generated.
+     * @param user The user being sent the OTP.
+     */
+    public void sendOTPEmail(String otp, User user) {
+
+        String email = null;
+
+        switch (user.getUserRole()) {
+            case MEMBER:
+                email = ((MemberUser) user).getMember()
+                        .getApplicant().getEmail();
+                break;
+            case ADMINISTRATOR:
+            case EMPLOYEE:
+                email = ((AdminUser) user).getEmail();
+                break;
+        }
+
+        if (email == null) {
+            log.info("No email was found to send this message to.");
+            throw new UnprocessableException("No email was found to send this message to.");
+        }
+
+        final String template = "user/password-reset";
+        final String landingPortalUrl = appConfig.getLandingPortal();
+        final Map<String, String> variables = new HashMap<>();
+        variables.put("landingPortalUrl", landingPortalUrl);
+        variables.put("otp", otp);
+
+        emailService.sendHtmlEmail("Password Reset", template, email, variables);
     }
 
     /**
