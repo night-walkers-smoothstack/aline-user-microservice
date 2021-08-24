@@ -1,6 +1,7 @@
 package com.aline.usermicroservice.controller;
 
 import com.aline.core.aws.email.EmailService;
+import com.aline.core.aws.sms.SMSService;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
@@ -62,6 +63,9 @@ class UserIntegrationTest {
     EmailService emailService;
 
     @MockBean
+    SMSService smsService;
+
+    @MockBean
     RandomNumberGenerator rng;
 
     @Autowired
@@ -80,6 +84,7 @@ class UserIntegrationTest {
     void setUp() {
         // Keep emails from sending during integration test. (Don't pull an HBO Max)
         doNothing().when(emailService).sendHtmlEmail(any(), any(), any(), any());
+        doNothing().when(smsService).sendSMSMessage(any(), any(), any());
     }
 
     @Test
