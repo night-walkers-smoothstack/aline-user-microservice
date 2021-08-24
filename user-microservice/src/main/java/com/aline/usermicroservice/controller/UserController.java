@@ -168,7 +168,7 @@ public class UserController {
      */
     @PostMapping("/otp-authentication")
     public ResponseEntity<Void> authenticateOtp(@Valid @RequestBody OtpAuthentication authentication) {
-        passwordService.checkOtp(authentication.getOtp(), authentication.getUsername());
+        passwordService.verifyOtp(authentication.getOtp(), authentication.getUsername());
         return ResponseEntity.ok().build();
     }
 

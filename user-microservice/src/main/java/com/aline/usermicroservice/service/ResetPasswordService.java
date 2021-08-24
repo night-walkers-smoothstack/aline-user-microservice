@@ -78,9 +78,11 @@ public class ResetPasswordService {
     /**
      * Check if OTP exists
      */
-    public void checkOtp(String otp, String username) {
-        repository.findByOtpAndUserUsername(otp, username)
+    public void verifyOtp(String otp, String username) {
+        OneTimePasscode otpEntity = repository.findByOtpAndUserUsername(otp, username)
                 .orElseThrow(() -> new ForbiddenException("One-time passcode is incorrect."));
+        otpEntity.setChecked(true);
+        repository.save(otpEntity);
     }
 
     /**
@@ -121,6 +123,8 @@ public class ResetPasswordService {
                 .orElseThrow(UserNotFoundException::new);
         OneTimePasscode otp = repository.findByUser(user)
                 .orElseThrow(TokenNotFoundException::new);
+        if (!otp.isChecked())
+            throw new UnprocessableException("The One-time password has not been verified.");
         if (!user.getUsername().equals(request.getUsername()))
             throw new UnprocessableException("Cannot use this OTP for this action.");
 
