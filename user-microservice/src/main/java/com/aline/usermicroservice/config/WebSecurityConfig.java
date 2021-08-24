@@ -4,7 +4,6 @@ import com.aline.core.config.AppConfig;
 import com.aline.core.security.AuthenticationFilter;
 import com.aline.core.security.JwtTokenVerifier;
 import com.aline.core.security.service.SecurityUserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.crypto.SecretKey;
 import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,12 +34,11 @@ import java.util.Collections;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final DataSource dataSource;
+    private final PasswordEncoder passwordEncoder;
     private final SecurityUserService service;
     private final AppConfig appConfig;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationFilter authenticationFilter;
     private final JwtTokenVerifier verifier;
-    private final SecretKey secretKey;
-    private final ObjectMapper objectMapper;
 
     @Override
     @Autowired
@@ -59,8 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .addFilter(new AuthenticationFilter(authenticationManager(),
-                        appConfig, secretKey, objectMapper))
+                .addFilter(authenticationFilter)
                 .addFilterAfter(verifier, AuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/v3/api-docs/**",
@@ -74,11 +70,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticated();
     }
 
-//    @Bean
-//    @Override
-//    public AuthenticationManager authenticationManagerBean() throws Exception {
-//        return super.authenticationManagerBean();
-//    }
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
