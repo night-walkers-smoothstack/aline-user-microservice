@@ -6,13 +6,12 @@ spring:
     name: "user-microservice"
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: create
     database-platform: "org.hibernate.dialect.H2Dialect"
   datasource:
     username: "sa"
     password: ""
-    url: "jdbc:h2:mem:testdb"
+    url: "jdbc:h2:mem:testdb;MODE=MYSQL"
     driver-class-name: org.h2.Driver
     initialization-mode: never
   jackson:
@@ -20,6 +19,8 @@ spring:
       INDENT_OUTPUT: true
 
 app:
+  sms:
+    enable: true
   email:
     from: "no-reply@alinefinancial.com"
     enable: true
