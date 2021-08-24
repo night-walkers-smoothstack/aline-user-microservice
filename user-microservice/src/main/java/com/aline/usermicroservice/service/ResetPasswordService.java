@@ -175,6 +175,8 @@ public class ResetPasswordService {
             throw new UnprocessableException("The One-time password has not been verified.");
         if (!user.getUsername().equals(request.getUsername()))
             throw new UnprocessableException("Cannot use this OTP for this action.");
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword()))
+            throw new UnprocessableException("New password cannot be the same as your old password.");
 
         if (!passwordEncoder.matches(request.getOtp(), otp.getOtp()))
             throw new ForbiddenException("One-time password is incorrect.");
