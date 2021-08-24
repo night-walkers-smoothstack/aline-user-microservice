@@ -6,7 +6,7 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.exception.ForbiddenException;
 import com.aline.core.exception.UnprocessableException;
-import com.aline.core.exception.unauthorized.IncorrectOTPException;
+import com.aline.core.exception.forbidden.IncorrectOTPException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.OneTimePasscode;
