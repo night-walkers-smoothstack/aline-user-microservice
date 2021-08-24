@@ -26,5 +26,7 @@ app:
     enable: true
   security:
     secret-key: "ThisIsAGreatSecretKey!!!"
+    jwt:
+      secret-key: "ThisIsAGreatJWTSecretKeyThatWeNeedToUseForLoginStuffForOurSecurityAndStuff"
   member-dashboard: "http://localhost:4200"
   landing-portal: "http://localhost:3007"
