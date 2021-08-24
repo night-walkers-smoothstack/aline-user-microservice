@@ -6,7 +6,7 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.exception.ForbiddenException;
 import com.aline.core.exception.UnprocessableException;
-import com.aline.core.exception.forbidden.IncorrectOTPException;
+import com.aline.core.exception.unauthorized.IncorrectOTPException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.OneTimePasscode;
@@ -19,6 +19,7 @@ import com.aline.core.util.RandomNumberGenerator;
 import com.aline.usermicroservice.service.function.HandleOtpBeforeHash;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -117,9 +118,14 @@ public class ResetPasswordService {
 
     }
 
+    /**
+     * Reset password
+     * @param request the request to reset a user's password
+     */
     @Transactional(rollbackOn = {
             UserNotFoundException.class,
-            TokenNotFoundException.class
+            TokenNotFoundException.class,
+            DataIntegrityViolationException.class
     })
     public void resetPassword(@Valid ResetPasswordRequest request) {
         User user = userRepository.findByUsername(request.getUsername())
@@ -137,6 +143,7 @@ public class ResetPasswordService {
         String hashedNewOtp = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(hashedNewOtp);
 
+        repository.deleteById(otp.getId());
         userRepository.save(user);
     }
 
