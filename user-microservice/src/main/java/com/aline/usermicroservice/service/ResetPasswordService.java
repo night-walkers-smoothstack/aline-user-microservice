@@ -6,6 +6,7 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.exception.ForbiddenException;
 import com.aline.core.exception.UnprocessableException;
+import com.aline.core.exception.forbidden.IncorrectOTPException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.OneTimePasscode;
@@ -79,8 +80,10 @@ public class ResetPasswordService {
      * Check if OTP exists
      */
     public void verifyOtp(String otp, String username) {
-        OneTimePasscode otpEntity = repository.findByOtpAndUserUsername(otp, username)
-                .orElseThrow(() -> new ForbiddenException("One-time passcode is incorrect."));
+        OneTimePasscode otpEntity = repository.findByUserUsername(username)
+                        .orElseThrow(IncorrectOTPException::new);
+        if(!passwordEncoder.matches(otp, otpEntity.getOtp()))
+            throw new IncorrectOTPException();
         otpEntity.setChecked(true);
         repository.save(otpEntity);
     }

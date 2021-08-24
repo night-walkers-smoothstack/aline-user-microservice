@@ -377,6 +377,18 @@ class UserIntegrationTest {
                     .content(body))
                     .andExpect(status().isOk());
 
+            // Check phase
+            OtpAuthentication otpAuthentication = OtpAuthentication.builder()
+                    .username("john_smith")
+                    .otp("123456").build();
+
+            String authBody = mapper.writeValueAsString(otpAuthentication);
+
+            mockMvc.perform(post("/users/otp-authentication")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(authBody))
+                    .andExpect(status().isOk());
+
             ResetPasswordRequest request = ResetPasswordRequest.builder()
                     .username("john_smith")
                     .otp("123456")
@@ -443,6 +455,18 @@ class UserIntegrationTest {
                     .otp("654321")
                     .newPassword("NewP@ssword123").build();
             String requestBody = mapper.writeValueAsString(request);
+
+            // Check phase
+            OtpAuthentication otpAuthentication = OtpAuthentication.builder()
+                    .username("john_smith")
+                    .otp("123456").build();
+
+            String authBody = mapper.writeValueAsString(otpAuthentication);
+
+            mockMvc.perform(post("/users/otp-authentication")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(authBody))
+                    .andExpect(status().isOk());
 
             // Create new password reset request for the user
             mockMvc.perform(put("/users/password-reset")
