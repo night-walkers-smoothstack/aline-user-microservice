@@ -4,6 +4,7 @@ import com.aline.core.aws.email.EmailService;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
+import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
@@ -387,6 +388,36 @@ class UserIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody))
                     .andExpect(status().isOk());
+        }
+
+        @Test
+        void status_isForbidden_when_OTP_is_notCorrect_in_checkPhase() throws Exception {
+
+            createDefaultMemberUser("john_smith");
+
+            ResetPasswordAuthentication authentication = ResetPasswordAuthentication
+                    .builder()
+                    .username("john_smith")
+                    .contactMethod(ContactMethod.PHONE).build();
+
+            String body = mapper.writeValueAsString(authentication);
+
+            // Create new password reset one-time password for the user
+            mockMvc.perform(post("/users/password-reset-otp")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isOk());
+
+            OtpAuthentication otpAuthentication = OtpAuthentication.builder()
+                    .otp("654321")
+                    .username("john_smith").build();
+            String requestBody = mapper.writeValueAsString(otpAuthentication);
+
+            // Create new password reset request for the user
+            mockMvc.perform(post("/users/otp-authentication")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isForbidden());
         }
 
         @Test

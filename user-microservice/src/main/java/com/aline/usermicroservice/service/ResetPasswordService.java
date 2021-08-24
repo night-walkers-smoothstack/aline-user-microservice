@@ -76,6 +76,14 @@ public class ResetPasswordService {
     }
 
     /**
+     * Check if OTP exists
+     */
+    public void checkOtp(String otp, String username) {
+        repository.findByOtpAndUserUsername(otp, username)
+                .orElseThrow(() -> new ForbiddenException("One-time passcode is incorrect."));
+    }
+
+    /**
      * Send OTP message to a user.
      * @param otp The OTP generated.
      * @param user The user being sent the OTP.

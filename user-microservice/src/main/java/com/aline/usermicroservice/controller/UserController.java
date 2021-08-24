@@ -1,6 +1,7 @@
 package com.aline.usermicroservice.controller;
 
 import com.aline.core.dto.request.ConfirmUserRegistration;
+import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
@@ -112,7 +113,7 @@ public class UserController {
      * @return ConfirmUserRegistrationResponse ResponseEntity
      */
     @PostMapping("/confirmation")
-    public ResponseEntity<ConfirmUserRegistrationResponse> confirmUserRegistration(@RequestBody ConfirmUserRegistration confirmUserRegistration) {
+    public ResponseEntity<ConfirmUserRegistrationResponse> confirmUserRegistration(@Valid @RequestBody ConfirmUserRegistration confirmUserRegistration) {
 
         UserRegistrationToken token = confirmationService.getTokenById(confirmUserRegistration.getToken());
         ConfirmUserRegistrationResponse response = confirmationService.confirmRegistration(token);
@@ -123,8 +124,14 @@ public class UserController {
                 .body(response);
     }
 
+    /**
+     * Sends a reset OTP to the requesting user
+     * specified in the DTO.
+     * @param resetPasswordAuthentication the DTO that contains the user information
+     * @return Response Entity of Void
+     */
     @PostMapping("/password-reset-otp")
-    public ResponseEntity<Void> createPasswordResetOtp(@RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
+    public ResponseEntity<Void> createPasswordResetOtp(@Valid @RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
                 (otp, user) -> {
                     log.info("Contact Method: {}", resetPasswordAuthentication.getContactMethod());
@@ -141,9 +148,27 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Reset password based on information
+     * passed in through the request.
+     * @param request The request DTO that contains the new password and OTP
+     * @return Response Entity of Void
+     */
     @PutMapping("/password-reset")
-    public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordService.resetPassword(request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Authenticates the OTP and checks to make sure
+     * it exists with the correct username.
+     * @param authentication The DTO that contains the username and the OTP.
+     * @return Ok response entity.
+     */
+    @PostMapping("/otp-authentication")
+    public ResponseEntity<Void> authenticateOtp(@Valid @RequestBody OtpAuthentication authentication) {
+        passwordService.checkOtp(authentication.getOtp(), authentication.getUsername());
         return ResponseEntity.ok().build();
     }
 
