@@ -6,8 +6,9 @@ spring:
     name: "user-microservice"
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     database-platform: "org.hibernate.dialect.H2Dialect"
+    show-sql: true
   datasource:
     username: "sa"
     password: ""

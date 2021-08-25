@@ -1,5 +1,6 @@
-package com.aline.usermicroservice.controller;
+package com.aline.usermicroservice;
 
+import com.aline.core.annotations.test.SpringBootIntegrationTest;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
 import com.aline.core.dto.request.AdminUserRegistration;
@@ -16,6 +17,7 @@ import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
+import com.aline.core.test.DisabledSecurityTest;
 import com.aline.core.util.RandomNumberGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +29,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -53,15 +54,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootIntegrationTest
 @Slf4j(topic = "Users Integration Test")
 @DisplayName("Users Integration Test")
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
-class UserIntegrationTest {
+class UserIntegrationTest extends DisabledSecurityTest {
 
     @MockBean
     EmailService emailService;
