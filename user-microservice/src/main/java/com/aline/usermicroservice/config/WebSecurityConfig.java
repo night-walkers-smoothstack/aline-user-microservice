@@ -3,110 +3,25 @@ package com.aline.usermicroservice.config;
 import com.aline.core.config.AppConfig;
 import com.aline.core.security.AuthenticationFilter;
 import com.aline.core.security.JwtTokenVerifier;
+import com.aline.core.security.config.AbstractWebSecurityConfig;
 import com.aline.core.security.service.SecurityUserService;
-import lombok.RequiredArgsConstructor;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.sql.DataSource;
-import java.util.Arrays;
-import java.util.Collections;
 
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-@RequiredArgsConstructor
+/**
+ * Web Security configuration
+ */
 @Configuration
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig extends AbstractWebSecurityConfig {
 
-    private final DataSource dataSource;
-    private final PasswordEncoder passwordEncoder;
-    private final SecurityUserService service;
-    private final AppConfig appConfig;
-    private final AuthenticationFilter authenticationFilter;
-    private final JwtTokenVerifier verifier;
-
-    @Override
-    @Autowired
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.jdbcAuthentication()
-                .dataSource(dataSource)
-                .usersByUsernameQuery("SELECT username, password, enabled FROM user WHERE username = ?")
-                .authoritiesByUsernameQuery("SELECT username, role, enabled FROM user WHERE username = ?")
-                .passwordEncoder(passwordEncoder);
+    public WebSecurityConfig(DataSource dataSource, PasswordEncoder passwordEncoder, SecurityUserService service, AppConfig appConfig, AuthenticationFilter authenticationFilter, JwtTokenVerifier verifier) {
+        super(dataSource, passwordEncoder, service, appConfig, authenticationFilter, verifier);
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .addFilter(authenticationFilter)
-                .addFilterAfter(verifier, AuthenticationFilter.class)
-                .authorizeRequests()
-                .antMatchers("/v3/api-docs/**",
-                        "/health",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/users/**",
-                        "/webjars/**",
-                        "**/swagger-resources/**").permitAll()
-                .anyRequest()
-                .authenticated();
-    }
-
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(service);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(
-                Arrays.asList(
-                    appConfig.getAdminPortal(),
-                    appConfig.getLandingPortal(),
-                    appConfig.getMemberDashboard()));
-        configuration.setAllowedMethods(Collections.singletonList("*"));
-        configuration.setAllowedHeaders(
-                Arrays.asList(HttpHeaders.AUTHORIZATION,
-                        HttpHeaders.CONTENT_TYPE,
-                        HttpHeaders.CONTENT_LENGTH,
-                        HttpHeaders.ACCEPT,
-                        HttpHeaders.ORIGIN,
-                        HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD,
-                        HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
-                        HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
-        configuration.setExposedHeaders(Arrays.asList(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE));
-
-        val source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
+    public String[] publicAntMatchers() {
+        return new String[0];
     }
 }
