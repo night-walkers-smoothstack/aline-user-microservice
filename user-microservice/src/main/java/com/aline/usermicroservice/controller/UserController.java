@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +55,7 @@ public class UserController {
     private final UserConfirmationService confirmationService;
     private final ResetPasswordService passwordService;
 
-    @PreAuthorize("hasAuthority('member')")
+    @PreAuthorize("true")
     @Operation(description = "Get a user by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User with specified ID found."),
