@@ -22,6 +22,8 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
 
     @Override
     public String[] publicAntMatchers() {
-        return new String[0];
+        return new String[]{
+                "/users/**"
+        };
     }
 }
