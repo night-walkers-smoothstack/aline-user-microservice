@@ -6,7 +6,6 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
-import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
@@ -26,8 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,7 +52,6 @@ public class UserController {
     private final UserConfirmationService confirmationService;
     private final ResetPasswordService passwordService;
 
-    @PreAuthorize("true")
     @Operation(description = "Get a user by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User with specified ID found."),
