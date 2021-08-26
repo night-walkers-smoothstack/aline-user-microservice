@@ -433,7 +433,7 @@ class UserIntegrationTest extends DisabledSecurityTest {
             mockMvc.perform(post("/users/otp-authentication")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -476,7 +476,7 @@ class UserIntegrationTest extends DisabledSecurityTest {
             mockMvc.perform(put("/users/password-reset")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test

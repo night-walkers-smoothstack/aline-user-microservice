@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -54,7 +55,8 @@ public class UserController {
     private final UserConfirmationService confirmationService;
     private final ResetPasswordService passwordService;
 
-    @PostAuthorize("@authorizationService.hasAccess(returnObject)")
+    @PreAuthorize("hasAnyAuthority('administrator', 'employee', 'member')")
+    @PostAuthorize("@authService.canAccess(returnObject.body)")
     @Operation(description = "Get a user by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User with specified ID found."),
@@ -69,6 +71,7 @@ public class UserController {
                 .body(userResponse);
     }
 
+    @PreAuthorize("hasAnyAuthority('administrator', 'employee')")
     @Operation(description = "Get a paginated response of users")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Paginated response was sent. It may have an empty content array which means there are no users.")
@@ -114,6 +117,12 @@ public class UserController {
      * @param confirmUserRegistration The confirm registration dto sent from the front-end
      * @return ConfirmUserRegistrationResponse ResponseEntity
      */
+    @Operation(description = "Confirm user registration")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User registration was successfully confirmed."),
+            @ApiResponse(responseCode = "404", description = "User or registration was not found."),
+            @ApiResponse(responseCode = "410", description = "Token does not exist or is expired.")
+    })
     @PostMapping("/confirmation")
     public ResponseEntity<ConfirmUserRegistrationResponse> confirmUserRegistration(@Valid @RequestBody ConfirmUserRegistration confirmUserRegistration) {
 
@@ -132,6 +141,12 @@ public class UserController {
      * @param resetPasswordAuthentication the DTO that contains the user information
      * @return Response Entity of Void
      */
+    @Operation(description = "Create a one-time passcode to reset a user's password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password OTP is created."),
+            @ApiResponse(responseCode = "404", description = "User to create the OTP for was not found."),
+            @ApiResponse(responseCode = "422", description = "One-time passcode was not sent through either SMS or Email.")
+    })
     @PostMapping("/password-reset-otp")
     public ResponseEntity<Void> createPasswordResetOtp(@Valid @RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
@@ -157,6 +172,11 @@ public class UserController {
      * @param request The request DTO that contains the new password and OTP
      * @return Response Entity of Void
      */
+    @Operation(description = "Reset user password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password successfully reset."),
+            @ApiResponse(responseCode = "")
+    })
     @PutMapping("/password-reset")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordService.resetPassword(request);
