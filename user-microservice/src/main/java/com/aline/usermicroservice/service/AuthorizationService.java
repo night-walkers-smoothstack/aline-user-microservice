@@ -1,32 +1,27 @@
 package com.aline.usermicroservice.service;
 
 import com.aline.core.dto.response.UserResponse;
-import com.aline.core.model.user.UserRole;
-import lombok.NonNull;
+import com.aline.core.exception.notfound.UserNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @Slf4j(topic = "Authorization Service")
+@RequiredArgsConstructor
 public class AuthorizationService {
 
-    public boolean ownsResource(@NonNull UserResponse userResponse, @NonNull Authentication authentication) {
-        log.info("Resource Username: {}", userResponse.getUsername());
-        log.info("Principal Username: {}", authentication.getPrincipal());
-        return userResponse.getUsername().equals(authentication.getPrincipal()) ||
-                userResponse.getRole() == UserRole.ADMINISTRATOR || userResponse.getRole() == UserRole.EMPLOYEE;
-    }
-
-    public boolean hasRole(@NonNull Authentication authentication) {
-        log.info("Username: {}", authentication.getPrincipal());
-        log.info("Authorities: {}", authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(", ")));
-        return true;
+    public boolean hasAccess(ResponseEntity<UserResponse> response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) auth.getPrincipal();
+        UserResponse userResponse = Optional.ofNullable(response.getBody())
+                .orElseThrow(UserNotFoundException::new);
+        return username.equals(userResponse.getUsername());
     }
 
 }

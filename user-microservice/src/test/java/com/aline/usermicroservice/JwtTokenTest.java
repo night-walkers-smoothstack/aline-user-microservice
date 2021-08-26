@@ -36,7 +36,6 @@ public class JwtTokenTest {
         assertEquals(expectedUsername, token.getUsername());
         assertEquals(expectedIat, token.getIssuedAt());
         assertEquals(expectedExp, token.getExpiration());
-        assertEquals(expectedAuthority, token.getAuthority());
 
     }
 
