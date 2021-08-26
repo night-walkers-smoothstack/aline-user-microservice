@@ -1,7 +1,7 @@
 package com.aline.usermicroservice;
 
 import com.aline.core.annotations.test.SpringBootUnitTest;
-import com.aline.core.security.model.UserJwt;
+import com.aline.core.security.model.JwtToken;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +31,7 @@ public class JwtTokenTest {
 
         final GrantedAuthority expectedAuthority = new SimpleGrantedAuthority("member");
 
-        final UserJwt token = UserJwt.from(jwtTokenStr, jwtSecretKey);
+        final JwtToken token = JwtToken.from(jwtTokenStr, jwtSecretKey);
 
         assertEquals(expectedUsername, token.getUsername());
         assertEquals(expectedIat, token.getIssuedAt());
