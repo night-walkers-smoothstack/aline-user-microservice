@@ -55,7 +55,7 @@ public class UserController {
     private final UserConfirmationService confirmationService;
     private final ResetPasswordService passwordService;
 
-    @PreAuthorize("hasAnyAuthority('administrator', 'employee', 'member')")
+    @PreAuthorize("hasAnyAuthority(@roles.member, @roles.admin, @roles.employee)")
     @PostAuthorize("@authService.canAccess(returnObject.body)")
     @Operation(description = "Get a user by ID")
     @ApiResponses({
@@ -71,7 +71,7 @@ public class UserController {
                 .body(userResponse);
     }
 
-    @PreAuthorize("hasAnyAuthority('administrator', 'employee')")
+    @PreAuthorize("hasAnyAuthority(@roles.admin, @roles.employee)")
     @Operation(description = "Get a paginated response of users")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Paginated response was sent. It may have an empty content array which means there are no users.")
