@@ -17,7 +17,6 @@ import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
-import com.aline.core.test.DisabledSecurityTest;
 import com.aline.core.util.RandomNumberGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Users Integration Test")
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
-@TestPropertySource("classpath:application-no-security-test.properties")
+@TestPropertySource("classpath:application-unsecured-test.properties")
 class UserIntegrationTest {
 
     @MockBean
