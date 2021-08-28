@@ -107,9 +107,9 @@ class ResourceSecurityTest {
 
         @Test
         @WithAnonymousUser
-        void test_getUserById_statusIsUnauthorized_when_userIsAnonymous() throws Exception {
+        void test_getUserById_statusIsForbidden_when_userIsAnonymous() throws Exception {
             mockMvc.perform(get("/users/{id}", FOUND_MEMBER))
-                    .andExpect(status().isUnauthorized());
+                    .andExpect(status().isForbidden());
         }
 
     }
