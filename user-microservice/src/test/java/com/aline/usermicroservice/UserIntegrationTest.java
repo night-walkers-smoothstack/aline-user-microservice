@@ -1,6 +1,6 @@
 package com.aline.usermicroservice;
 
-import com.aline.core.annotations.test.SpringBootIntegrationTest;
+import com.aline.core.annotation.test.SpringBootIntegrationTest;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
 import com.aline.core.dto.request.AdminUserRegistration;

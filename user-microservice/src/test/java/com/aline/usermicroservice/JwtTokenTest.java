@@ -1,6 +1,6 @@
 package com.aline.usermicroservice;
 
-import com.aline.core.annotations.test.SpringBootUnitTest;
+import com.aline.core.annotation.test.SpringBootUnitTest;
 import com.aline.core.security.model.JwtToken;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

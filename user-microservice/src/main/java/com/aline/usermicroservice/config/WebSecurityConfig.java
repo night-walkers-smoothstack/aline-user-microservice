@@ -1,6 +1,6 @@
 package com.aline.usermicroservice.config;
 
-import com.aline.core.annotations.WebSecurityConfiguration;
+import com.aline.core.annotation.WebSecurityConfiguration;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.UserRole;
 import com.aline.core.security.config.AbstractWebSecurityConfig;

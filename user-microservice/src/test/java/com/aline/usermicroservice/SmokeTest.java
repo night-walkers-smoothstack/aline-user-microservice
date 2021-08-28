@@ -1,6 +1,6 @@
 package com.aline.usermicroservice;
 
-import com.aline.core.annotations.test.SpringBootIntegrationTest;
+import com.aline.core.annotation.test.SpringBootIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;

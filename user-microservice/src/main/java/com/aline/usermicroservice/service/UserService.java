@@ -12,6 +12,7 @@ import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SearchSpecification;
+import com.aline.core.util.SimpleSearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +85,7 @@ public class UserService {
      */
     @PreAuthorize("hasAnyAuthority(@roles.admin, @roles.employee)")
     public PaginatedResponse<UserResponse> getAllUsers(Pageable pageable, String search) {
-        SearchSpecification<User> spec = new SearchSpecification<>(search);
+        SimpleSearchSpecification<User> spec = new SimpleSearchSpecification<>(search);
         Page<User> usersPage = repository.findAll(spec, pageable);
         Page<UserResponse> userResponsePage = usersPage.map(this::mapToDto);
         return new PaginatedResponse<>(userResponsePage.getContent(), pageable, userResponsePage.getTotalElements());
