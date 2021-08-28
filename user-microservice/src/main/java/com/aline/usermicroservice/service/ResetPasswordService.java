@@ -6,7 +6,6 @@ import com.aline.core.aws.sms.SMSType;
 import com.aline.core.config.AppConfig;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
-import com.aline.core.exception.UnauthorizedException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
