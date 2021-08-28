@@ -10,6 +10,8 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @ActiveProfiles("test")
 @SpringBootTest
 @Slf4j(topic = "Email Service Test")
@@ -24,7 +26,9 @@ class EmailServiceTest {
         Map<String, String> variables = new HashMap<>();
         variables.put("name", "Test Boy");
         variables.put("color", "red");
-        log.info(emailService.interpolateVariablesInLine(message, variables));
+        String newMessage = emailService.interpolateVariablesInLine(message, variables);
+        log.info(newMessage);
+        assertEquals("Hello, Test Boy! My favorite color is red.", newMessage);
     }
 
 }

@@ -101,7 +101,7 @@ public class UserService {
      * @param user User to map.
      * @return A UserResponse mapped from a User entity.
      */
-    protected UserResponse mapToDto(User user) {
+    public UserResponse mapToDto(User user) {
         UserResponse userResponse = modelMapper.map(user, UserResponse.class);
         userResponse.setRole(user.getUserRole());
 
