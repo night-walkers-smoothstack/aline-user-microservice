@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -55,8 +54,6 @@ public class UserController {
     private final UserConfirmationService confirmationService;
     private final ResetPasswordService passwordService;
 
-    @PreAuthorize("hasAnyAuthority(@roles.member, @roles.admin, @roles.employee)")
-    @PostAuthorize("@authService.canAccess(returnObject.body)")
     @Operation(description = "Get a user by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User with specified ID found."),
@@ -71,7 +68,6 @@ public class UserController {
                 .body(userResponse);
     }
 
-    @PreAuthorize("hasAnyAuthority(@roles.admin, @roles.employee)")
     @Operation(description = "Get a paginated response of users")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Paginated response was sent. It may have an empty content array which means there are no users.")

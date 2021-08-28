@@ -1,10 +1,9 @@
 package com.aline.usermicroservice;
 
+import com.aline.core.annotations.EnableCoreModule;
 import com.aline.core.annotations.test.SpringBootIntegrationTest;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.UserRole;
-import com.aline.core.security.model.SecurityUser;
-import com.aline.core.security.model.UserRoleAuthority;
 import com.aline.usermicroservice.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,13 +21,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import javax.transaction.Transactional;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootIntegrationTest
-@ContextConfiguration
+@EnableCoreModule
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
 @Slf4j
