@@ -49,12 +49,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootIntegrationTest
+@SpringBootIntegrationTest(properties = "app.security.disable-web-security=true")
 @Slf4j(topic = "Users Integration Test")
 @DisplayName("Users Integration Test")
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Transactional
-@TestPropertySource("classpath:application-unsecured-test.properties")
 class UserIntegrationTest {
 
     @MockBean
