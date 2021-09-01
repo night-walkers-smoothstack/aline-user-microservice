@@ -17,6 +17,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,6 +28,7 @@ import javax.transaction.Transactional;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -87,7 +90,7 @@ class LoginIntegrationTest {
     }
 
     @Test
-    void test_logic_statusIsUnauthorized_when_login_correct_but_user_notEnabled() throws Exception {
+    void test_login_statusIsUnauthorized_when_login_correct_but_user_notEnabled() throws Exception {
         createDefaultMemberUser("member_user", "P@ssword123");
         AuthenticationRequest request = AuthenticationRequest.builder()
                 .username("member_user")
@@ -98,6 +101,31 @@ class LoginIntegrationTest {
                         .content(body))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION));
+    }
+
+    @Test
+    @WithMockUser(username = "member_user")
+    void test_getCurrentUser_statusIsOk_when_user_ownsResource() throws Exception {
+        createDefaultMemberUser("member_user", "P@ssword123");
+        mockMvc.perform(get("/users/current"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("member_user"));
+    }
+
+    @Test
+    @WithMockUser(username = "nosey_user")
+    void test_getCurrentUser_statusIsUnauthorized_when_user_doesNotOwnResource() throws Exception {
+        createDefaultMemberUser("member_user", "P@ssword123");
+        mockMvc.perform(get("/users/current"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void test_getCurrentUser_statusIsForbidden_when_user_is_anonymous() throws Exception {
+        createDefaultMemberUser("member_user", "P@ssword123");
+        mockMvc.perform(get("/users/current"))
+                .andExpect(status().isForbidden());
     }
 
     // Create a default member user for log in purposes.
