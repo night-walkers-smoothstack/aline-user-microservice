@@ -7,6 +7,7 @@ import com.aline.core.exception.UnauthorizedException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.Applicant;
+import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
@@ -111,15 +112,21 @@ public class UserService {
         if (user.getUserRole() == UserRole.MEMBER) {
             MemberUser memberUser = (MemberUser) user;
 
-            Applicant applicant = memberUser.getMember().getApplicant();
+            Member member = memberUser.getMember();
+            Applicant applicant = member.getApplicant();
 
             String firstName = applicant.getFirstName();
             String lastName = applicant.getLastName();
             String email = applicant.getEmail();
 
+            long memberId = member.getId();
+            String membershipId = member.getMembershipId();
+
             userResponse.setFirstName(firstName);
             userResponse.setLastName(lastName);
             userResponse.setEmail(email);
+            userResponse.setMemberId(memberId);
+            userResponse.setMembershipId(membershipId);
         }
 
         return userResponse;
@@ -177,9 +184,10 @@ public class UserService {
      * Get current user information.
      * @return The current authenticated user.
      */
-    public User getCurrentUser(Authentication authentication) {
+    public UserResponse getCurrentUser(Authentication authentication) {
         String username = authentication.getName();
-        return repository.findByUsername(username)
+        User user = repository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
+        return mapToDto(user);
     }
 }

@@ -9,6 +9,7 @@ import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
+import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
 import com.aline.usermicroservice.service.ResetPasswordService;
@@ -25,6 +26,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -192,6 +195,26 @@ public class UserController {
     public ResponseEntity<Void> authenticateOtp(@Valid @RequestBody OtpAuthentication authentication) {
         passwordService.verifyOtp(authentication.getOtp(), authentication.getUsername());
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Get the current authenticated user
+     * @param authentication The security context authentication object
+     * @return A user response of the current authenticated user
+     */
+    @Operation(description = "Get the current authenticated user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Retrieved current authenticated user."),
+            @ApiResponse(responseCode = "401", description = "Not authorized to access the user.")
+    })
+    @GetMapping("/current")
+    public ResponseEntity<UserResponse> getCurrentUser(@CurrentSecurityContext(expression = "authentication")
+                                                       Authentication authentication) {
+        UserResponse currentUser = userService.getCurrentUser(authentication);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(currentUser);
     }
 
 }
