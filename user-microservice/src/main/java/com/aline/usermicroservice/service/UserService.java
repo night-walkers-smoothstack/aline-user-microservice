@@ -3,6 +3,7 @@ package com.aline.usermicroservice.service;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.UnauthorizedException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.Applicant;
@@ -23,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -168,5 +171,15 @@ public class UserService {
      */
     public User getUserByToken(UserRegistrationToken token) {
         return repository.findByToken(token).orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
+     * Get current user information.
+     * @return The current authenticated user.
+     */
+    public User getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
     }
 }

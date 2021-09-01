@@ -183,6 +183,11 @@ public class UserController {
      * @param authentication The DTO that contains the username and the OTP.
      * @return Ok response entity.
      */
+    @Operation(description = "Verify the OTP and allow it to be used.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "One-time passcode was successfully verified."),
+            @ApiResponse(responseCode = "401", description = "One-time passcode was not correct and was not verified.")
+    })
     @PostMapping("/otp-authentication")
     public ResponseEntity<Void> authenticateOtp(@Valid @RequestBody OtpAuthentication authentication) {
         passwordService.verifyOtp(authentication.getOtp(), authentication.getUsername());
