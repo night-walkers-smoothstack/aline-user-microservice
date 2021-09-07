@@ -18,6 +18,7 @@ import com.aline.core.util.SimpleSearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class UserService {
 
@@ -186,6 +188,7 @@ public class UserService {
      */
     public UserResponse getCurrentUser(Authentication authentication) {
         String username = authentication.getName();
+        log.info(username);
         User user = repository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
         return mapToDto(user);

@@ -2,7 +2,6 @@ package com.aline.usermicroservice.config;
 
 import com.aline.core.annotation.WebSecurityConfiguration;
 import com.aline.core.dto.response.UserResponse;
-import com.aline.core.model.user.UserRole;
 import com.aline.core.security.config.AbstractWebSecurityConfig;
 import com.aline.core.security.service.AbstractAuthorizationService;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +30,7 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
         return new AbstractAuthorizationService<UserResponse>() {
             @Override
             public boolean canAccess(UserResponse returnObject) {
-                return (returnObject.getUsername().equals(getUsername()) ||
-                        getRole() == UserRole.ADMINISTRATOR ||
-                        getRole() == UserRole.EMPLOYEE);
+                return (returnObject.getUsername().equals(getUsername()) || roleIsManagement());
             }
         };
     }
