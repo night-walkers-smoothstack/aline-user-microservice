@@ -3,9 +3,11 @@ package com.aline.usermicroservice.service;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.UnauthorizedException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.Applicant;
+import com.aline.core.model.Member;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
@@ -16,6 +18,7 @@ import com.aline.core.util.SimpleSearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -23,6 +26,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -43,6 +48,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class UserService {
 
@@ -108,15 +114,21 @@ public class UserService {
         if (user.getUserRole() == UserRole.MEMBER) {
             MemberUser memberUser = (MemberUser) user;
 
-            Applicant applicant = memberUser.getMember().getApplicant();
+            Member member = memberUser.getMember();
+            Applicant applicant = member.getApplicant();
 
             String firstName = applicant.getFirstName();
             String lastName = applicant.getLastName();
             String email = applicant.getEmail();
 
+            long memberId = member.getId();
+            String membershipId = member.getMembershipId();
+
             userResponse.setFirstName(firstName);
             userResponse.setLastName(lastName);
             userResponse.setEmail(email);
+            userResponse.setMemberId(memberId);
+            userResponse.setMembershipId(membershipId);
         }
 
         return userResponse;
@@ -168,5 +180,17 @@ public class UserService {
      */
     public User getUserByToken(UserRegistrationToken token) {
         return repository.findByToken(token).orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
+     * Get current user information.
+     * @return The current authenticated user.
+     */
+    public UserResponse getCurrentUser(Authentication authentication) {
+        String username = authentication.getName();
+        log.info(username);
+        User user = repository.findByUsername(username)
+                .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
+        return mapToDto(user);
     }
 }
