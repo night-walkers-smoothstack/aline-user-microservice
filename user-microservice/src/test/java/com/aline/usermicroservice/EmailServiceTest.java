@@ -5,11 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -25,7 +26,9 @@ class EmailServiceTest {
         Map<String, String> variables = new HashMap<>();
         variables.put("name", "Test Boy");
         variables.put("color", "red");
-        log.info(emailService.interpolateVariablesInLine(message, variables));
+        String newMessage = emailService.interpolateVariablesInLine(message, variables);
+        log.info(newMessage);
+        assertEquals("Hello, Test Boy! My favorite color is red.", newMessage);
     }
 
 }

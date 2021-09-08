@@ -6,11 +6,10 @@ import com.aline.core.aws.sms.SMSType;
 import com.aline.core.config.AppConfig;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
-import com.aline.core.exception.ForbiddenException;
 import com.aline.core.exception.UnprocessableException;
-import com.aline.core.exception.forbidden.IncorrectOTPException;
 import com.aline.core.exception.notfound.TokenNotFoundException;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.exception.unauthorized.IncorrectOTPException;
 import com.aline.core.model.OneTimePasscode;
 import com.aline.core.model.user.AdminUser;
 import com.aline.core.model.user.MemberUser;
@@ -179,7 +178,7 @@ public class ResetPasswordService {
             throw new UnprocessableException("New password cannot be the same as your old password.");
 
         if (!passwordEncoder.matches(request.getOtp(), otp.getOtp()))
-            throw new ForbiddenException("One-time password is incorrect.");
+            throw new IncorrectOTPException();
 
         String hashedNewOtp = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(hashedNewOtp);

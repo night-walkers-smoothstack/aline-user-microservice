@@ -6,7 +6,6 @@ import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
-import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.PaginatedResponse;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
@@ -112,6 +111,12 @@ public class UserController {
      * @param confirmUserRegistration The confirm registration dto sent from the front-end
      * @return ConfirmUserRegistrationResponse ResponseEntity
      */
+    @Operation(description = "Confirm user registration")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User registration was successfully confirmed."),
+            @ApiResponse(responseCode = "404", description = "User or registration was not found."),
+            @ApiResponse(responseCode = "410", description = "Token does not exist or is expired.")
+    })
     @PostMapping("/confirmation")
     public ResponseEntity<ConfirmUserRegistrationResponse> confirmUserRegistration(@Valid @RequestBody ConfirmUserRegistration confirmUserRegistration) {
 
@@ -130,6 +135,12 @@ public class UserController {
      * @param resetPasswordAuthentication the DTO that contains the user information
      * @return Response Entity of Void
      */
+    @Operation(description = "Create a one-time passcode to reset a user's password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password OTP is created."),
+            @ApiResponse(responseCode = "404", description = "User to create the OTP for was not found."),
+            @ApiResponse(responseCode = "422", description = "One-time passcode was not sent through either SMS or Email.")
+    })
     @PostMapping("/password-reset-otp")
     public ResponseEntity<Void> createPasswordResetOtp(@Valid @RequestBody ResetPasswordAuthentication resetPasswordAuthentication) {
         passwordService.createResetPasswordRequest(resetPasswordAuthentication,
@@ -155,6 +166,11 @@ public class UserController {
      * @param request The request DTO that contains the new password and OTP
      * @return Response Entity of Void
      */
+    @Operation(description = "Reset user password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Password successfully reset."),
+            @ApiResponse(responseCode = "")
+    })
     @PutMapping("/password-reset")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordService.resetPassword(request);

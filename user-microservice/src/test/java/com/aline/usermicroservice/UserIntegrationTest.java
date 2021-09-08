@@ -1,5 +1,6 @@
-package com.aline.usermicroservice.controller;
+package com.aline.usermicroservice;
 
+import com.aline.core.annotation.test.SpringBootIntegrationTest;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
 import com.aline.core.dto.request.AdminUserRegistration;
@@ -24,12 +25,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,9 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootIntegrationTest(properties = "app.security.disable-web-security=true")
 @Slf4j(topic = "Users Integration Test")
 @DisplayName("Users Integration Test")
 @Sql(scripts = "classpath:scripts/members.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -435,7 +432,7 @@ class UserIntegrationTest {
             mockMvc.perform(post("/users/otp-authentication")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
@@ -478,7 +475,7 @@ class UserIntegrationTest {
             mockMvc.perform(put("/users/password-reset")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
 
         @Test
