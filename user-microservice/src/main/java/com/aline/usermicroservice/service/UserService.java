@@ -188,7 +188,6 @@ public class UserService {
      */
     public UserResponse getCurrentUser(Authentication authentication) {
         String username = authentication.getName();
-        log.info(username);
         User user = repository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
         return mapToDto(user);

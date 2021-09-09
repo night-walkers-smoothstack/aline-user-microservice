@@ -214,7 +214,6 @@ public class UserController {
     @GetMapping("/current")
     public ResponseEntity<UserResponse> getCurrentUser(@CurrentSecurityContext(expression = "authentication")
                                                        Authentication authentication) {
-        log.info("Retrieve current user.");
         UserResponse currentUser = userService.getCurrentUser(authentication);
         return ResponseEntity
                 .ok()
