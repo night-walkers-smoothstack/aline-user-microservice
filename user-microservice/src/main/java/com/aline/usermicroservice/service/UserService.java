@@ -272,7 +272,7 @@ public class UserService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(rollbackOn = {NotFoundException.class, UserNotFoundException.class})
     public void updateUserProfile(long userId, UserProfileUpdate update) {
         User user = repository.findById(userId).orElseThrow(UserNotFoundException::new);
         if (user.getUserRole() != UserRole.MEMBER)
