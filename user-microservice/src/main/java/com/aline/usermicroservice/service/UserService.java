@@ -273,6 +273,7 @@ public class UserService {
     }
 
     @Transactional(rollbackOn = {NotFoundException.class, UserNotFoundException.class})
+    @PreAuthorize("@authService.canAccess(#userId)")
     public void updateUserProfile(long userId, UserProfileUpdate update) {
         User user = repository.findById(userId).orElseThrow(UserNotFoundException::new);
         if (user.getUserRole() != UserRole.MEMBER)
@@ -315,4 +316,15 @@ public class UserService {
         memberUser.setMember(member);
         repository.save(memberUser);
     }
+
+    @Transactional(rollbackOn = {
+            UserNotFoundException.class,
+            NotFoundException.class
+    })
+    public void updateCurrentUserProfile(Authentication authentication, UserProfileUpdate update) {
+        User user = repository.findByUsername(authentication.getName()).orElseThrow(UserNotFoundException::new);
+        long id = user.getId();
+        updateUserProfile(id, update);
+    }
+
 }

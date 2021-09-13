@@ -34,8 +34,8 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
                 return (returnObject.getUsername().equals(getUsername()) || roleIsManagement());
             }
 
-            public boolean canAccess(UserProfile profile) {
-                return (profile.getUsername().equals(getUsername()) || roleIsManagement());
+            public boolean canAccess(long userId) {
+                return (getUser().getId() == userId) || roleIsManagement();
             }
         };
     }
