@@ -517,6 +517,20 @@ class UserIntegrationTest {
                     .andExpect(jsonPath("$.billingAddress.address").value("321 Main St."));
         }
 
+        @Test
+        void test_statusIsNotFound_when_userDoesNotExist() throws Exception {
+            mockMvc.perform(get("/users/999/profile"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void test_statusIsOk_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
+            createDefaultMemberUser("test_boy");
+            mockMvc.perform(put("/users/1/profile"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        }
+
     }
 
     /**
