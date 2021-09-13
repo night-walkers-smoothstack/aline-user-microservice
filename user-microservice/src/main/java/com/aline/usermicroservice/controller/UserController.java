@@ -254,9 +254,20 @@ public class UserController {
                 .body(currentProfile);
     }
 
+    @Operation(description = "Update user profile by user ID")
     @PutMapping("/{id}/profile")
     public ResponseEntity<Void> updateUserProfileById(@PathVariable long id, @RequestBody UserProfileUpdate update) {
         userService.updateUserProfile(id, update);
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+    @Operation(description = "Update current logged-in user profile")
+    @PutMapping("/current/profile")
+    public ResponseEntity<Void> updateUserProfileById(@CurrentSecurityContext(expression = "authentication")
+                                                      Authentication authentication, @RequestBody UserProfileUpdate update) {
+        userService.updateCurrentUserProfile(authentication, update);
         return ResponseEntity
                 .noContent()
                 .build();
