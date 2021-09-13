@@ -1,6 +1,7 @@
 package com.aline.usermicroservice.config;
 
 import com.aline.core.annotation.WebSecurityConfiguration;
+import com.aline.core.dto.response.UserProfile;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.security.config.AbstractWebSecurityConfig;
 import com.aline.core.security.service.AbstractAuthorizationService;
@@ -31,6 +32,10 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
             @Override
             public boolean canAccess(UserResponse returnObject) {
                 return (returnObject.getUsername().equals(getUsername()) || roleIsManagement());
+            }
+
+            public boolean canAccess(UserProfile profile) {
+                return (profile.getUsername().equals(getUsername()) || roleIsManagement());
             }
         };
     }
