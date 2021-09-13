@@ -10,12 +10,15 @@ import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.Member;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.repository.MemberRepository;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.RandomNumberGenerator;
@@ -36,6 +39,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import javax.transaction.Transactional;
 
 import static com.aline.core.dto.request.MemberUserRegistration.MemberUserRegistrationBuilder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -73,6 +77,9 @@ class UserIntegrationTest {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Autowired
     UserRegistrationTokenRepository tokenRepository;
@@ -526,9 +533,91 @@ class UserIntegrationTest {
         @Test
         void test_statusIsOk_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
             createDefaultMemberUser("test_boy");
-            mockMvc.perform(put("/users/1/profile"))
+
+            UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                    .email("changed@email.com")
+                    .build();
+
+            String body = mapper.writeValueAsString(updateProfile);
+
+            mockMvc.perform(put("/users/1/profile")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+            Member member = memberRepository.findById(1L).orElse(null);
+            assertNotNull(member);
+            assertEquals("changed@email.com", member.getApplicant().getEmail());
+        }
+
+        @Nested
+        @DisplayName("Update User Profile")
+        class UpdateUserProfileTests {
+
+            @Test
+            void test_statusIsOk_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
+                createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .email("changed@email.com")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+                Member member = memberRepository.findById(1L).orElse(null);
+                assertNotNull(member);
+                assertEquals("changed@email.com", member.getApplicant().getEmail());
+            }
+
+            @Test
+            void test_statusIsOk_when_profileExists_and_requestToChangeLastNameIsValid() throws Exception {
+                createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .lastName("Changed")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+                Member member = memberRepository.findById(1L).orElse(null);
+                assertNotNull(member);
+                assertEquals("Changed", member.getApplicant().getLastName());
+            }
+
+            @Test
+            void test_statusIsOk_when_profileExists_and_requestToChangeUsernameIsValid() throws Exception {
+                createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .username("changed_boy")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+                User user = userRepository.findByUsername("changed_boy").orElse(null);
+                assertNotNull(user);
+                assertEquals("changed_boy", user.getUsername());
+            }
+
         }
 
     }
