@@ -1,5 +1,7 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.dto.request.AddressChangeRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.AddressResponse;
 import com.aline.core.dto.response.ContactInfo;
@@ -16,6 +18,8 @@ import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
+import com.aline.core.repository.ApplicantRepository;
+import com.aline.core.repository.MemberRepository;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.SimpleSearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
@@ -24,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
@@ -34,6 +39,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +62,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository repository;
+    private final MemberService memberService;
+    private final ApplicantService applicantService;
     private final ModelMapper modelMapper;
 
     // Retrieve a list of UserRegistrationHandler implementations
@@ -229,6 +237,11 @@ public class UserService {
         return mapUserToProfile(memberUser);
     }
 
+    /**
+     * Map MemberUser object to a UserProfile
+     * @param memberUser The user to map to a profile
+     * @return A profile of the passed user
+     */
     public UserProfile mapUserToProfile(MemberUser memberUser) {
         Member member = memberUser.getMember();
         Applicant applicant = member.getApplicant();
@@ -257,5 +270,49 @@ public class UserService {
                         .phone(applicant.getPhone())
                         .build())
                 .build();
+    }
+
+    @Transactional
+    public void updateUserProfile(long userId, UserProfileUpdate update) {
+        User user = repository.findById(userId).orElseThrow(UserNotFoundException::new);
+        if (user.getUserRole() != UserRole.MEMBER)
+            throw new NotFoundException("User does not have a profile.");
+
+        MemberUser memberUser = (MemberUser) user;
+        Member member = memberUser.getMember();
+        Applicant applicant = member.getApplicant();
+
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration()
+                .setSkipNullEnabled(true);
+
+        modelMapper.map(update, applicant);
+
+        if (update.getBillingAddress() != null) {
+            modelMapper.map(update.getBillingAddress(), applicant);
+        }
+
+        if (update.getMailingAddress() != null) {
+            ModelMapper mailingAddressMapper = new ModelMapper();
+            TypeMap<AddressChangeRequest, Applicant> mailingAddressMap =
+                    mailingAddressMapper.typeMap(AddressChangeRequest.class, Applicant.class);
+
+            mailingAddressMap.addMapping(AddressChangeRequest::getAddress, Applicant::setMailingAddress);
+            mailingAddressMap.addMapping(AddressChangeRequest::getCity, Applicant::setMailingCity);
+            mailingAddressMap.addMapping(AddressChangeRequest::getState, Applicant::setMailingState);
+            mailingAddressMap.addMapping(AddressChangeRequest::getZipcode, Applicant::setMailingZipcode);
+
+            mailingAddressMapper.map(update.getMailingAddress(), applicant);
+        }
+
+        if (update.getUsername() != null) {
+            memberUser.setUsername(update.getUsername());
+        }
+
+        applicantService.saveApplicant(applicant);
+        member.setApplicant(applicant);
+        memberService.saveMember(member);
+        memberUser.setMember(member);
+        repository.save(memberUser);
     }
 }

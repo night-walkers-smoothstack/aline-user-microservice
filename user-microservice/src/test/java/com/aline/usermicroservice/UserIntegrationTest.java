@@ -4,6 +4,7 @@ import com.aline.core.annotation.test.SpringBootIntegrationTest;
 import com.aline.core.annotation.test.SpringTestProperties;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
+import com.aline.core.dto.request.AddressChangeRequest;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
@@ -616,6 +617,52 @@ class UserIntegrationTest {
                 User user = userRepository.findByUsername("changed_boy").orElse(null);
                 assertNotNull(user);
                 assertEquals("changed_boy", user.getUsername());
+            }
+
+            @Test
+            void test_statusIsOk_when_profileExists_and_requestToChangeAddressIsValid() throws Exception {
+                createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .billingAddress(AddressChangeRequest.builder()
+                                .address("123 Change St.")
+                                .build())
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+                Member member = memberRepository.findById(1L).orElse(null);
+                assertNotNull(member);
+                assertEquals("123 Change St.", member.getApplicant().getAddress());
+            }
+
+            @Test
+            void test_statusIsOk_when_profileExists_and_requestToChangeMailingAddressIsValid() throws Exception {
+                createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .billingAddress(AddressChangeRequest.builder()
+                                .address("PO Box 123456")
+                                .build())
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/1/profile")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isOk())
+                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+                Member member = memberRepository.findById(1L).orElse(null);
+                assertNotNull(member);
+                assertEquals("PO Box 123456", member.getApplicant().getMailingAddress());
             }
 
         }
