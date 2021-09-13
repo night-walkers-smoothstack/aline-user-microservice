@@ -505,10 +505,8 @@ class UserIntegrationTest {
 
         @Test
         void test_statusIsOk_when_userExists_and_memberExists() throws Exception {
-
             // Create default member user
             createDefaultMemberUser("test_boy");
-
             mockMvc.perform(get("/users/1/profile"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -517,7 +515,6 @@ class UserIntegrationTest {
                     .andExpect(jsonPath("$.lastName").value("Smith"))
                     .andExpect(jsonPath("$.contactInfo.email").value("johnsmith@email.com"))
                     .andExpect(jsonPath("$.billingAddress.address").value("321 Main St."));
-
         }
 
     }
