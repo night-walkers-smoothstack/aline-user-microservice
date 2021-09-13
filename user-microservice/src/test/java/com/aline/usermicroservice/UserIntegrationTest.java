@@ -17,6 +17,7 @@ import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
 import com.aline.core.model.Member;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.repository.MemberRepository;
@@ -531,34 +532,14 @@ class UserIntegrationTest {
                     .andExpect(status().isNotFound());
         }
 
-        @Test
-        void test_statusIsOk_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
-            createDefaultMemberUser("test_boy");
-
-            UserProfileUpdate updateProfile = UserProfileUpdate.builder()
-                    .email("changed@email.com")
-                    .build();
-
-            String body = mapper.writeValueAsString(updateProfile);
-
-            mockMvc.perform(put("/users/1/profile")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-
-            Member member = memberRepository.findById(1L).orElse(null);
-            assertNotNull(member);
-            assertEquals("changed@email.com", member.getApplicant().getEmail());
-        }
-
         @Nested
         @DisplayName("Update User Profile")
         class UpdateUserProfileTests {
 
             @Test
-            void test_statusIsOk_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
-                createDefaultMemberUser("test_boy");
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+                long id = user.getId();
 
                 UserProfileUpdate updateProfile = UserProfileUpdate.builder()
                         .email("changed@email.com")
@@ -566,20 +547,19 @@ class UserIntegrationTest {
 
                 String body = mapper.writeValueAsString(updateProfile);
 
-                mockMvc.perform(put("/users/1/profile")
+                mockMvc.perform(put("/users/{id}/profile", id)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .andExpect(status().isNoContent());
 
-                Member member = memberRepository.findById(1L).orElse(null);
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
                 assertNotNull(member);
                 assertEquals("changed@email.com", member.getApplicant().getEmail());
             }
 
             @Test
-            void test_statusIsOk_when_profileExists_and_requestToChangeLastNameIsValid() throws Exception {
-                createDefaultMemberUser("test_boy");
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeLastNameIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
 
                 UserProfileUpdate updateProfile = UserProfileUpdate.builder()
                         .lastName("Changed")
@@ -587,20 +567,19 @@ class UserIntegrationTest {
 
                 String body = mapper.writeValueAsString(updateProfile);
 
-                mockMvc.perform(put("/users/1/profile")
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .andExpect(status().isNoContent());
 
-                Member member = memberRepository.findById(1L).orElse(null);
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
                 assertNotNull(member);
                 assertEquals("Changed", member.getApplicant().getLastName());
             }
 
             @Test
-            void test_statusIsOk_when_profileExists_and_requestToChangeUsernameIsValid() throws Exception {
-                createDefaultMemberUser("test_boy");
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeUsernameIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
 
                 UserProfileUpdate updateProfile = UserProfileUpdate.builder()
                         .username("changed_boy")
@@ -608,61 +587,54 @@ class UserIntegrationTest {
 
                 String body = mapper.writeValueAsString(updateProfile);
 
-                mockMvc.perform(put("/users/1/profile")
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .andExpect(status().isNoContent());
 
-                User user = userRepository.findByUsername("changed_boy").orElse(null);
-                assertNotNull(user);
-                assertEquals("changed_boy", user.getUsername());
+                User user1 = userRepository.findByUsername("changed_boy").orElse(null);
+                assertNotNull(user1);
+                assertEquals("changed_boy", user1.getUsername());
             }
 
             @Test
-            void test_statusIsOk_when_profileExists_and_requestToChangeAddressIsValid() throws Exception {
-                createDefaultMemberUser("test_boy");
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeAddressIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
 
                 UserProfileUpdate updateProfile = UserProfileUpdate.builder()
-                        .billingAddress(AddressChangeRequest.builder()
-                                .address("123 Change St.")
-                                .build())
+                        .address("123 Change St.")
                         .build();
 
                 String body = mapper.writeValueAsString(updateProfile);
 
-                mockMvc.perform(put("/users/1/profile")
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .andExpect(status().isNoContent());
 
-                Member member = memberRepository.findById(1L).orElse(null);
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
                 assertNotNull(member);
                 assertEquals("123 Change St.", member.getApplicant().getAddress());
             }
 
             @Test
-            void test_statusIsOk_when_profileExists_and_requestToChangeMailingAddressIsValid() throws Exception {
-                createDefaultMemberUser("test_boy");
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeMailingAddressIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
 
                 UserProfileUpdate updateProfile = UserProfileUpdate.builder()
-                        .billingAddress(AddressChangeRequest.builder()
-                                .address("PO Box 123456")
-                                .build())
+                        .address("PO Box 1234")
                         .build();
 
                 String body = mapper.writeValueAsString(updateProfile);
 
-                mockMvc.perform(put("/users/1/profile")
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                        .andExpect(status().isNoContent());
 
-                Member member = memberRepository.findById(1L).orElse(null);
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
                 assertNotNull(member);
-                assertEquals("PO Box 123456", member.getApplicant().getMailingAddress());
+                assertEquals("PO Box 1234", member.getApplicant().getMailingAddress());
             }
 
         }

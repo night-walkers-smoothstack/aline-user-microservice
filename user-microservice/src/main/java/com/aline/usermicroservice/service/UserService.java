@@ -286,25 +286,7 @@ public class UserService {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration()
                 .setSkipNullEnabled(true);
-
         modelMapper.map(update, applicant);
-
-        if (update.getBillingAddress() != null) {
-            modelMapper.map(update.getBillingAddress(), applicant);
-        }
-
-        if (update.getMailingAddress() != null) {
-            ModelMapper mailingAddressMapper = new ModelMapper();
-            TypeMap<AddressChangeRequest, Applicant> mailingAddressMap =
-                    mailingAddressMapper.typeMap(AddressChangeRequest.class, Applicant.class);
-
-            mailingAddressMap.addMapping(AddressChangeRequest::getAddress, Applicant::setMailingAddress);
-            mailingAddressMap.addMapping(AddressChangeRequest::getCity, Applicant::setMailingCity);
-            mailingAddressMap.addMapping(AddressChangeRequest::getState, Applicant::setMailingState);
-            mailingAddressMap.addMapping(AddressChangeRequest::getZipcode, Applicant::setMailingZipcode);
-
-            mailingAddressMapper.map(update.getMailingAddress(), applicant);
-        }
 
         if (update.getUsername() != null) {
             memberUser.setUsername(update.getUsername());
@@ -322,7 +304,8 @@ public class UserService {
             NotFoundException.class
     })
     public void updateCurrentUserProfile(Authentication authentication, UserProfileUpdate update) {
-        User user = repository.findByUsername(authentication.getName()).orElseThrow(UserNotFoundException::new);
+        User user = repository.findByUsername(authentication.getName())
+                .orElseThrow(UserNotFoundException::new);
         long id = user.getId();
         updateUserProfile(id, update);
     }

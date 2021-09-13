@@ -23,21 +23,8 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
                         "/users/otp-authentication",
                         "/users/password-reset-otp")
                 .permitAll()
-                .antMatchers(HttpMethod.PUT, "/users/password-reset").permitAll();
-    }
-
-    @Bean
-    public AbstractAuthorizationService<UserResponse> authService() {
-        return new AbstractAuthorizationService<UserResponse>() {
-            @Override
-            public boolean canAccess(UserResponse returnObject) {
-                return (returnObject.getUsername().equals(getUsername()) || roleIsManagement());
-            }
-
-            public boolean canAccess(long userId) {
-                return (getUser().getId() == userId) || roleIsManagement();
-            }
-        };
+                .antMatchers(HttpMethod.PUT, "/users/password-reset")
+                .permitAll();
     }
 
 }

@@ -4,6 +4,7 @@ import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
@@ -251,6 +252,14 @@ public class UserController {
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(currentProfile);
+    }
+
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<Void> updateUserProfileById(@PathVariable long id, @RequestBody UserProfileUpdate update) {
+        userService.updateUserProfile(id, update);
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
 }
