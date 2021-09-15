@@ -54,7 +54,9 @@ pipeline {
             
                 echo "Docker build ${SERVICE_NAME}..."
                 sh "aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin --password-stdin ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com"
+                echo "Building image ${SERVICE_NAME}..."
                 sh "docker build --tag ${APP_NAME}/${APP_ENV}/${SERVICE_NAME}:${COMMIT_HASH} ."
+                echo "Tagging image ${SERVICE_NAME}..."
                 sh "docker tag ${APP_NAME}/${APP_ENV}/${SERVICE_NAME}:${COMMIT_HASH} ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com/${APP_NAME}/${APP_ENV}/${SERVICE_NAME}:${COMMIT_HASH}"
                 echo "Docker push ${SERVICE_NAME}..."
                 sh "docker push ${AWS_ID}.dkr.ecr.${REGION}.amazonaws.com/${APP_NAME}/${APP_ENV}/${SERVICE_NAME}:${COMMIT_HASH}"
