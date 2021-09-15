@@ -22,15 +22,3 @@ Resources:
       ImageTagMutability: IMMUTABLE
       EncryptionConfiguration:
         EncryptionType: AES256
-
-  # Create a secret for the repository
-  RepoSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: !Sub ${AppName}/${AppEnv}/service/${ServiceName}
-      SecretString: !Sub |
-        {
-          "RepoId": "${ServiceRepo}"
-          "RepoArn": "${ServiceRepo.Arn}"
-          "URI": "${ServiceRepo.RepositoryUri}"
-        }
