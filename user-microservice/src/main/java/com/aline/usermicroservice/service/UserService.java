@@ -1,8 +1,14 @@
 package com.aline.usermicroservice.service;
 
+import com.aline.core.dto.request.AddressChangeRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
+import com.aline.core.dto.response.AddressResponse;
+import com.aline.core.dto.response.ContactInfo;
 import com.aline.core.dto.response.PaginatedResponse;
+import com.aline.core.dto.response.UserProfile;
 import com.aline.core.dto.response.UserResponse;
+import com.aline.core.exception.NotFoundException;
 import com.aline.core.exception.UnauthorizedException;
 import com.aline.core.exception.UnprocessableException;
 import com.aline.core.exception.notfound.UserNotFoundException;
@@ -12,8 +18,9 @@ import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
 import com.aline.core.model.user.UserRole;
+import com.aline.core.repository.ApplicantRepository;
+import com.aline.core.repository.MemberRepository;
 import com.aline.core.repository.UserRepository;
-import com.aline.core.util.SearchSpecification;
 import com.aline.core.util.SimpleSearchSpecification;
 import com.aline.usermicroservice.service.function.UserRegistrationConsumer;
 import com.aline.usermicroservice.service.registration.UserRegistrationHandler;
@@ -21,16 +28,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.security.PermitAll;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +62,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository repository;
+    private final MemberService memberService;
+    private final ApplicantService applicantService;
     private final ModelMapper modelMapper;
 
     // Retrieve a list of UserRegistrationHandler implementations
@@ -192,4 +203,111 @@ public class UserService {
                 .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
         return mapToDto(user);
     }
+
+    /**
+     * Get user profile by id
+     * @param id The id of the user
+     * @return A UserProfile DTO of the requested user ID
+     */
+    @PermitAll
+    @PostAuthorize("@authService.canAccess(returnObject)")
+    public UserProfile getUserProfileById(long id) {
+        User user = repository.findById(id).orElseThrow(UserNotFoundException::new);
+
+        if (user.getUserRole() != UserRole.MEMBER)
+            throw new NotFoundException("User does not have a profile.");
+
+        MemberUser memberUser = (MemberUser) user;
+        return mapUserToProfile(memberUser);
+    }
+
+    /**
+     * Get current logged-in user profile
+     * @param authentication The authentication object of the logged-in user
+     * @return UserProfile DTO of the currently logged-in user
+     */
+    public UserProfile getCurrentUserProfile(Authentication authentication) {
+        String username = authentication.getName();
+        User user = repository.findByUsername(username)
+                .orElseThrow(() -> new UnauthorizedException("Not authorized to access this user."));
+        if (user.getUserRole() != UserRole.MEMBER)
+            throw new NotFoundException("User does not have a profile.");
+
+        MemberUser memberUser = (MemberUser) user;
+        return mapUserToProfile(memberUser);
+    }
+
+    /**
+     * Map MemberUser object to a UserProfile
+     * @param memberUser The user to map to a profile
+     * @return A profile of the passed user
+     */
+    public UserProfile mapUserToProfile(MemberUser memberUser) {
+        Member member = memberUser.getMember();
+        Applicant applicant = member.getApplicant();
+
+        return UserProfile.builder()
+                .username(memberUser.getUsername())
+                .firstName(applicant.getFirstName())
+                .middleName(applicant.getMiddleName())
+                .lastName(applicant.getLastName())
+                .income(applicant.getIncome())
+                .membershipId(member.getMembershipId())
+                .billingAddress(AddressResponse.builder()
+                        .address(applicant.getAddress())
+                        .city(applicant.getCity())
+                        .state(applicant.getState())
+                        .zipcode(applicant.getZipcode())
+                        .build())
+                .mailingAddress(AddressResponse.builder()
+                        .address(applicant.getMailingAddress())
+                        .city(applicant.getMailingCity())
+                        .state(applicant.getMailingState())
+                        .zipcode(applicant.getMailingZipcode())
+                        .build())
+                .contactInfo(ContactInfo.builder()
+                        .email(applicant.getEmail())
+                        .phone(applicant.getPhone())
+                        .build())
+                .build();
+    }
+
+    @Transactional(rollbackOn = {NotFoundException.class, UserNotFoundException.class})
+    @PreAuthorize("@authService.canAccess(#userId)")
+    public void updateUserProfile(long userId, UserProfileUpdate update) {
+        User user = repository.findById(userId).orElseThrow(UserNotFoundException::new);
+        if (user.getUserRole() != UserRole.MEMBER)
+            throw new NotFoundException("User does not have a profile.");
+
+        MemberUser memberUser = (MemberUser) user;
+        Member member = memberUser.getMember();
+        Applicant applicant = member.getApplicant();
+
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration()
+                .setSkipNullEnabled(true);
+        modelMapper.map(update, applicant);
+
+        if (update.getUsername() != null) {
+            memberUser.setUsername(update.getUsername());
+        }
+
+        applicantService.saveApplicant(applicant);
+        member.setApplicant(applicant);
+        memberService.saveMember(member);
+        memberUser.setMember(member);
+        repository.save(memberUser);
+    }
+
+    @Transactional(rollbackOn = {
+            UserNotFoundException.class,
+            NotFoundException.class
+    })
+    public void updateCurrentUserProfile(Authentication authentication, UserProfileUpdate update) {
+        User user = repository.findByUsername(authentication.getName())
+                .orElseThrow(UserNotFoundException::new);
+        long id = user.getId();
+        updateUserProfile(id, update);
+    }
+
 }

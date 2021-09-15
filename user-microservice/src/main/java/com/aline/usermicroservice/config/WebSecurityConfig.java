@@ -1,6 +1,7 @@
 package com.aline.usermicroservice.config;
 
 import com.aline.core.annotation.WebSecurityConfiguration;
+import com.aline.core.dto.response.UserProfile;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.security.config.AbstractWebSecurityConfig;
 import com.aline.core.security.service.AbstractAuthorizationService;
@@ -22,17 +23,8 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
                         "/users/otp-authentication",
                         "/users/password-reset-otp")
                 .permitAll()
-                .antMatchers(HttpMethod.PUT, "/users/password-reset").permitAll();
-    }
-
-    @Bean
-    public AbstractAuthorizationService<UserResponse> authService() {
-        return new AbstractAuthorizationService<UserResponse>() {
-            @Override
-            public boolean canAccess(UserResponse returnObject) {
-                return (returnObject.getUsername().equals(getUsername()) || roleIsManagement());
-            }
-        };
+                .antMatchers(HttpMethod.PUT, "/users/password-reset")
+                .permitAll();
     }
 
 }

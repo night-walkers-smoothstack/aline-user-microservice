@@ -4,18 +4,23 @@ import com.aline.core.annotation.test.SpringBootIntegrationTest;
 import com.aline.core.annotation.test.SpringTestProperties;
 import com.aline.core.aws.email.EmailService;
 import com.aline.core.aws.sms.SMSService;
+import com.aline.core.dto.request.AddressChangeRequest;
 import com.aline.core.dto.request.AdminUserRegistration;
 import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.MemberUserRegistration;
 import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ContactMethod;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.exception.notfound.UserNotFoundException;
+import com.aline.core.model.Member;
+import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.User;
 import com.aline.core.model.user.UserRegistrationToken;
+import com.aline.core.repository.MemberRepository;
 import com.aline.core.repository.UserRegistrationTokenRepository;
 import com.aline.core.repository.UserRepository;
 import com.aline.core.util.RandomNumberGenerator;
@@ -36,6 +41,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import javax.transaction.Transactional;
 
 import static com.aline.core.dto.request.MemberUserRegistration.MemberUserRegistrationBuilder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -73,6 +79,9 @@ class UserIntegrationTest {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    MemberRepository memberRepository;
 
     @Autowired
     UserRegistrationTokenRepository tokenRepository;
@@ -495,6 +504,139 @@ class UserIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    @DisplayName("User Profile")
+    class UserProfileTests {
+
+        @Test
+        void test_statusIsOk_when_userExists_and_memberExists() throws Exception {
+            // Create default member user
+            createDefaultMemberUser("test_boy");
+            mockMvc.perform(get("/users/1/profile"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.username").value("test_boy"))
+                    .andExpect(jsonPath("$.firstName").value("John"))
+                    .andExpect(jsonPath("$.lastName").value("Smith"))
+                    .andExpect(jsonPath("$.contactInfo.email").value("johnsmith@email.com"))
+                    .andExpect(jsonPath("$.billingAddress.address").value("321 Main St."));
+        }
+
+        @Test
+        void test_statusIsNotFound_when_userDoesNotExist() throws Exception {
+            mockMvc.perform(get("/users/999/profile"))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Nested
+        @DisplayName("Update User Profile")
+        class UpdateUserProfileTests {
+
+            @Test
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeEmailIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+                long id = user.getId();
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .email("changed@email.com")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/{id}/profile", id)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isNoContent());
+
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
+                assertNotNull(member);
+                assertEquals("changed@email.com", member.getApplicant().getEmail());
+            }
+
+            @Test
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeLastNameIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .lastName("Changed")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isNoContent());
+
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
+                assertNotNull(member);
+                assertEquals("Changed", member.getApplicant().getLastName());
+            }
+
+            @Test
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeUsernameIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .username("changed_boy")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isNoContent());
+
+                User user1 = userRepository.findByUsername("changed_boy").orElse(null);
+                assertNotNull(user1);
+                assertEquals("changed_boy", user1.getUsername());
+            }
+
+            @Test
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeAddressIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .address("123 Change St.")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isNoContent());
+
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
+                assertNotNull(member);
+                assertEquals("123 Change St.", member.getApplicant().getAddress());
+            }
+
+            @Test
+            void test_statusIsNoContent_when_profileExists_and_requestToChangeMailingAddressIsValid() throws Exception {
+                MemberUser user = (MemberUser) createDefaultMemberUser("test_boy");
+
+                UserProfileUpdate updateProfile = UserProfileUpdate.builder()
+                        .address("PO Box 1234")
+                        .build();
+
+                String body = mapper.writeValueAsString(updateProfile);
+
+                mockMvc.perform(put("/users/{id}/profile", user.getId())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(body))
+                        .andExpect(status().isNoContent());
+
+                Member member = memberRepository.findById(user.getMember().getId()).orElse(null);
+                assertNotNull(member);
+                assertEquals("PO Box 1234", member.getApplicant().getMailingAddress());
+            }
+
         }
 
     }

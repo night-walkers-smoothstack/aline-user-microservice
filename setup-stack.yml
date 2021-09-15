@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Set up stack to deploy microservice"
+Parameters:
+  AppEnv:
+    Type: String
+    Default: dev
+    Description: The environment profile the app will be deployed in
+  AppName:
+    Type: String
+    Default: alinefinancial
+    Description: The application's name
+  ServiceName:
+    Type: String
+    Description: The service's name
+Resources:
+
+  # ECR Repository for docker image of service
+  ServiceRepo:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${AppName}/${AppEnv}/${ServiceName}
+      ImageTagMutability: IMMUTABLE
+      EncryptionConfiguration:
+        EncryptionType: AES256
+
+  # Create a secret for the repository
+  RepoSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${AppName}/${AppEnv}/service/${ServiceName}
+      SecretString: !Sub |
+        {
+          "RepoId": "${ServiceRepo}"
+          "RepoArn": "${ServiceRepo.Arn}"
+          "URI": "${ServiceRepo.RepositoryUri}"
+        }

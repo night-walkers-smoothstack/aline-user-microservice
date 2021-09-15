@@ -4,9 +4,11 @@ import com.aline.core.dto.request.ConfirmUserRegistration;
 import com.aline.core.dto.request.OtpAuthentication;
 import com.aline.core.dto.request.ResetPasswordAuthentication;
 import com.aline.core.dto.request.ResetPasswordRequest;
+import com.aline.core.dto.request.UserProfileUpdate;
 import com.aline.core.dto.request.UserRegistration;
 import com.aline.core.dto.response.ConfirmUserRegistrationResponse;
 import com.aline.core.dto.response.PaginatedResponse;
+import com.aline.core.dto.response.UserProfile;
 import com.aline.core.dto.response.UserResponse;
 import com.aline.core.model.user.MemberUser;
 import com.aline.core.model.user.UserRegistrationToken;
@@ -219,6 +221,56 @@ public class UserController {
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(currentUser);
+    }
+
+    @Operation(description = "Get a user profile by ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of user profile"),
+            @ApiResponse(responseCode = "404", description = "User profile does not exist. (May not be a member)"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to access the user profile")
+    })
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<UserProfile> getUserProfile(@PathVariable long id) {
+        UserProfile profile = userService.getUserProfileById(id);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(profile);
+    }
+
+    @Operation(description = "Get a user profile of current logged-in user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of user profile"),
+            @ApiResponse(responseCode = "404", description = "User profile does not exist. (May not be a member)"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to access the user profile")
+    })
+    @GetMapping("/current/profile")
+    public ResponseEntity<UserProfile> getCurrentUserProfile(@CurrentSecurityContext(expression = "authentication")
+                                                             Authentication authentication) {
+        UserProfile currentProfile = userService.getCurrentUserProfile(authentication);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(currentProfile);
+    }
+
+    @Operation(description = "Update user profile by user ID")
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<Void> updateUserProfileById(@PathVariable long id, @RequestBody UserProfileUpdate update) {
+        userService.updateUserProfile(id, update);
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+    @Operation(description = "Update current logged-in user profile")
+    @PutMapping("/current/profile")
+    public ResponseEntity<Void> updateUserProfileById(@CurrentSecurityContext(expression = "authentication")
+                                                      Authentication authentication, @RequestBody UserProfileUpdate update) {
+        userService.updateCurrentUserProfile(authentication, update);
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
 }
