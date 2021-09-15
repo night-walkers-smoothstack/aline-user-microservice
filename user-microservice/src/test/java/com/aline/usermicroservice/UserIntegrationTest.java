@@ -515,8 +515,8 @@ class UserIntegrationTest {
         @Test
         void test_statusIsOk_when_userExists_and_memberExists() throws Exception {
             // Create default member user
-            createDefaultMemberUser("test_boy");
-            mockMvc.perform(get("/users/1/profile"))
+            User user = createDefaultMemberUser("test_boy");
+            mockMvc.perform(get("/users/{id}/profile", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.username").value("test_boy"))
