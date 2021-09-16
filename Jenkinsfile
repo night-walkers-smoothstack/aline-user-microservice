@@ -43,7 +43,17 @@ pipeline {
                 echo "Fetching CloudFormation template 'setup-stack.yml'..."
                 sh "wget https://raw.githubusercontent.com/${ORGANIZATION}/${PROJECT_NAME}/${APP_ENV}/setup-stack.yml"
                 echo "Deploying 'Setup Stack'..."
-                sh "aws cloudformation deploy --stack-name ${SERVICE_NAME}-setup-stack --template-file setup-stack.yml --parameter-overrides AppEnv=${APP_ENV} AppName=${APP_NAME} ServiceName=${SERVICE_NAME} --capabilities CAPABILITY_NAMED_IAM"
+                sh '''
+                    aws cloudformation deploy \
+                        --stack-name ${SERVICE_NAME}-setup-stack \
+                        --template-file setup-stack.yml \
+                        --parameter-overrides \
+                            AppEnv=${APP_ENV} \
+                            AppName=${APP_NAME} \
+                            ServiceName=${SERVICE_NAME} \
+                        --capabilities CAPABILITY_NAMED_IAM \
+                        --no-fail-on-empty-changeset
+                '''            
             }
 
         }
@@ -83,6 +93,7 @@ pipeline {
                         ServicePort=${SERVICE_PORT} \
                         CommitHash=${COMMIT_HASH} \
                     --capabilities CAPABILITY_NAMED_IAM
+                    --no-fail-on-empty-changeset
                 '''
             }
 
