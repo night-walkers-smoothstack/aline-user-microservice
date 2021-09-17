@@ -27,15 +27,14 @@ pipeline {
 
         }
 
-        stage("Test and Package") {
+        stage("Package Jar") {
         
             steps {
 
-                sh "mvn package"
+                sh "mvn package -DskipTests"
 
             }
         
-        }
 
         stage("Setup Image Stack") {
 
