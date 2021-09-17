@@ -19,6 +19,6 @@ Resources:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Sub ${AppName}/${AppEnv}/${ServiceName}
-      ImageTagMutability: IMMUTABLE
+      ImageTagMutability: MUTABLE
       EncryptionConfiguration:
         EncryptionType: AES256
