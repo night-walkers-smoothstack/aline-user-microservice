@@ -34,7 +34,8 @@ pipeline {
                 sh "mvn package -DskipTests"
 
             }
-        
+            
+        }
 
         stage("Setup Image Stack") {
 
