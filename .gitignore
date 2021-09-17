@@ -13,9 +13,6 @@ target/
 .springBeans
 .sts4-cache
 *.properties
-application.yaml
-application.yml
-application-*.yml
 !*-test.properties
 !*-test.yml
 !openapi-config.properties

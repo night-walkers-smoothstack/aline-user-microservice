@@ -1,0 +1,40 @@
+server:
+  port: ${APP_PORT}
+
+spring:
+  profiles:
+    active: "default"
+  application:
+    name: "user-microservice"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "${DB_HOST}:${DB_PORT}/${DB_NAME}"
+    initialization-mode: always
+
+
+app:
+  admin-portal: "${PORTAL_ADMIN}"
+  member-dashboard: "${PORTAL_DASHBOARD}"
+  landing-portal: "${PORTAL_LANDING}"
+  sms:
+    enable: true
+  email:
+    from: "no-reply@alinefinancial.com"
+    enable: true
+  security:
+    secret-key: "${ENCRYPT_SECRET_KEY}"
+    jwt:
+      secret-key: "${JWT_SECRET_KEY}"
+  aws:
+    email:
+      template-bucket-name: "aline-email-templates"
+    credentials:
+      access-key-id: "${APP_USER_ACCESS_KEY}"
+      secret-access-key: "${APP_USER_SECRET_KEY}"
+
