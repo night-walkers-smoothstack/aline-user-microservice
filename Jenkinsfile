@@ -34,7 +34,7 @@ pipeline {
                 sh "mvn package -DskipTests"
 
             }
-            
+
         }
 
         stage("Setup Image Stack") {
@@ -99,6 +99,16 @@ pipeline {
 
         }
 
+    }
+
+    post {
+    
+        always {
+        
+            sh "mvn clean"
+
+        }
+    
     }
 
 }
