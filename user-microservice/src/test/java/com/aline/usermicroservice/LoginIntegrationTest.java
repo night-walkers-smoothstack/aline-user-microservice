@@ -69,6 +69,7 @@ class LoginIntegrationTest {
                 .build();
         String body = mapper.writeValueAsString(request);
         mockMvc.perform(post("/login")
+                        .secure(true)
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(header().exists(HttpHeaders.AUTHORIZATION));
@@ -84,6 +85,7 @@ class LoginIntegrationTest {
                 .build();
         String body = mapper.writeValueAsString(request);
         mockMvc.perform(post("/login")
+                        .secure(true)
                         .content(body))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION));
@@ -98,6 +100,7 @@ class LoginIntegrationTest {
                 .build();
         String body = mapper.writeValueAsString(request);
         mockMvc.perform(post("/login")
+                        .secure(true)
                         .content(body))
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION));
@@ -107,7 +110,7 @@ class LoginIntegrationTest {
     @WithMockUser(username = "member_user")
     void test_getCurrentUser_statusIsOk_when_user_ownsResource() throws Exception {
         createDefaultMemberUser("member_user", "P@ssword123");
-        mockMvc.perform(get("/users/current"))
+        mockMvc.perform(get("/users/current").secure(true))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("member_user"));
     }
@@ -116,7 +119,7 @@ class LoginIntegrationTest {
     @WithMockUser(username = "nosey_user")
     void test_getCurrentUser_statusIsUnauthorized_when_user_doesNotOwnResource() throws Exception {
         createDefaultMemberUser("member_user", "P@ssword123");
-        mockMvc.perform(get("/users/current"))
+        mockMvc.perform(get("/users/current").secure(true))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -124,7 +127,7 @@ class LoginIntegrationTest {
     @WithAnonymousUser
     void test_getCurrentUser_statusIsForbidden_when_user_is_anonymous() throws Exception {
         createDefaultMemberUser("member_user", "P@ssword123");
-        mockMvc.perform(get("/users/current"))
+        mockMvc.perform(get("/users/current").secure(true))
                 .andExpect(status().isForbidden());
     }
 
@@ -139,6 +142,7 @@ class LoginIntegrationTest {
                         .build();
         String memberBody = mapper.writeValueAsString(memberUserRegistration);
         MvcResult result = mockMvc.perform(post("/users/registration")
+                        .secure(true)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(memberBody))
                 .andExpect(status().isCreated())
