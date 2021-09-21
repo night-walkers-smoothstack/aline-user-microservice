@@ -80,7 +80,6 @@ public class UserController {
     public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable,
                                                           @RequestParam(defaultValue = "") String search,
                                                           @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
-        log.info(authorization);
         PaginatedResponse<UserResponse> userResponsePage = userService.getAllUsers(pageable, search);
         return ResponseEntity
                 .ok()
