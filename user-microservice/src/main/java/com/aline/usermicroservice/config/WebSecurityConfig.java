@@ -16,6 +16,7 @@ public class WebSecurityConfig extends AbstractWebSecurityConfig {
 
     @Override
     protected void configureHttp(HttpSecurity http) throws Exception {
+        http.requiresChannel().anyRequest().requiresSecure();
         http.authorizeRequests()
                 .antMatchers(HttpMethod.POST,
                         "/users/registration",
