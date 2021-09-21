@@ -1,5 +1,9 @@
 server:
   port: ${APP_PORT}
+  ssl:
+    enabled-protocols: TLSv1.2
+    protocol: TLS
+    ciphers: TLS_RSA_WITH_AES_128_CBC_SHA256
 
 spring:
   profiles:
