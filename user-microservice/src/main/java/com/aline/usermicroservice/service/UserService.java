@@ -88,8 +88,8 @@ public class UserService {
      * @param id The ID to query.
      * @return A UserResponse of the queried user.
      */
-    @PreAuthorize("permitAll()")
-    @PostAuthorize("@authService.canAccess(returnObject)")
+	@PreAuthorize("permitAll()")
+	@PostAuthorize("@authService.canAccess(returnObject)")
     public UserResponse getUserById(Long id) {
         return mapToDto(repository.findById(id).orElseThrow(UserNotFoundException::new));
     }
