@@ -292,4 +292,13 @@ public class UserController {
                 .build();
     }
 
+	@Operation(description = "Disable/Enabled current logged-in user profile")
+	@PutMapping("/current/profile/status")
+	public ResponseEntity<Void> disableUserProfileById(
+			@CurrentSecurityContext(expression = "authentication") Authentication authentication,
+			@RequestBody Boolean status) {
+		userService.disableCurrentUserProfile(authentication, status);
+		return ResponseEntity.noContent().build();
+	}
+
 }
