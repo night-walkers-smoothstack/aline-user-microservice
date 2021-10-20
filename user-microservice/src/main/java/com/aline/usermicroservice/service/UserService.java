@@ -310,4 +310,23 @@ public class UserService {
         updateUserProfile(id, update);
     }
 
+	@Transactional(rollbackOn = { UserNotFoundException.class, NotFoundException.class })
+	public void disableCurrentUserProfile(Authentication authentication, Boolean status) {
+		User user = repository.findByUsername(authentication.getName()).orElseThrow(UserNotFoundException::new);
+		long id = user.getId();
+		disableUserProfile(id, status);
+
+	}
+
+	@Transactional(rollbackOn = { NotFoundException.class, UserNotFoundException.class })
+	@PreAuthorize("permitAll()")
+	public void disableUserProfile(long userId, Boolean status) {
+		User user = repository.findById(userId).orElseThrow(UserNotFoundException::new);
+		if (user.getUserRole() != UserRole.MEMBER)
+			throw new NotFoundException("User does not have a profile.");
+
+		MemberUser memberUser = (MemberUser) user;
+		memberUser.setEnabled(false);
+		repository.save(memberUser);
+	}
 }
